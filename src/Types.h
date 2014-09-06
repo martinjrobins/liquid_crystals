@@ -1,0 +1,41 @@
+/*
+ * Types.h
+ *
+ *  Created on: 6 Sep 2014
+ *      Author: mrobins
+ */
+
+#ifndef TYPES_H_
+#define TYPES_H_
+
+#include "Aboria.h"
+using namespace Aboria;
+
+#include <tuple>
+
+const double k_b = 1.3806488e-23;
+
+enum {SPECIES_VELOCITY,SPECIES_POTENTIAL,SPECIES_TOTAL_R,SPECIES_SAVED_R,SPECIES_SAVED_R1,SPECIES_NUM_EXITS};
+typedef std::tuple<Vect3d,double,Vect3d,Vect3d,Vect3d,unsigned int> SpeciesTuple;
+typedef Particles<SpeciesTuple> SpeciesType;
+
+#define GET_TUPLE(type,name,position,particle) type& name = std::get<position>(particle.get_data())
+#define REGISTER_SPECIES_PARTICLE(particle) \
+				const Vect3d& r = particle.get_position(); \
+				const bool alive = particle.is_alive(); \
+				GET_TUPLE(double,U,SPECIES_POTENTIAL,particle); \
+				GET_TUPLE(unsigned int,exits,SPECIES_NUM_EXITS,particle); \
+				GET_TUPLE(Vect3d,r0,SPECIES_SAVED_R,particle); \
+				GET_TUPLE(Vect3d,rt,SPECIES_TOTAL_R,particle); \
+				GET_TUPLE(Vect3d,r1,SPECIES_SAVED_R1,particle); \
+				GET_TUPLE(Vect3d,v,SPECIES_VELOCITY,particle);
+#define REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tuple) \
+				const Vect3d& dx = std::get<1>(tuple); \
+				const SpeciesType::Value& j = std::get<0>(tuple); \
+				const Vect3d& rj = j.get_position(); \
+				const bool alivej = j.is_alive(); \
+				const GET_TUPLE(double,Uj,SPECIES_POTENTIAL,j); \
+				const GET_TUPLE(Vect3d,vj,SPECIES_VELOCITY,j);
+
+
+#endif /* TYPES_H_ */
