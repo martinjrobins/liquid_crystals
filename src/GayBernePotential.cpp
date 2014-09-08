@@ -20,6 +20,10 @@ double GayBernePotential::evaluate(Vect3d& x1, Vect3d& u1, Vect3d& x2,
 	return 4*epsilon(udotu,u1dotr,u2dotr)(pow(q,12) - pow(q,6));
 }
 
+double GayBernePotential::cut_off() {
+	return 2.5*sigma_s*k;
+}
+
 GayBernePotential::~GayBernePotential() {
 	// TODO Auto-generated destructor stub
 }

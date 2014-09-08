@@ -25,6 +25,7 @@ public:
 		}
 	}
 	double evaluate(Vect3d &x1, Vect3d &u1, Vect3d &x2, Vect3d &u2);
+	double cut_off();
 	virtual ~GayBernePotential();
 private:
 	double epsilon(double udotu, double u1dotr, double u2dotr);
