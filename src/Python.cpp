@@ -8,31 +8,36 @@
 
 #include "Types.h"
 #include "ParticleSimulation.h"
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+using namespace Aboria;
+using namespace boost::python;
+
 
 BOOST_PYTHON_MODULE(particle_simulation) {
 
 
 	/*
-	 * vector
+	 * Particles
 	 */
-	class_<Aboria::Particles<> >("Vectd")
-	        .def(boost::python::vector_indexing_suite<std::vector<double> >())
+	class_<SpeciesType>("Particles")
+	        .def(boost::python::vector_indexing_suite<SpeciesType >())
 	    ;
 
-	VTK_PYTHON_CONVERSION(vtkUnstructuredGrid);
-	VTK_PYTHON_CONVERSION(vtkPolyData);
-
-
-	Vect3_from_python_list<double>();
-	Vect3_from_python_list<int>();
-	Vect3_from_python_list<bool>();
-	ReactionEquation_from_python_list();
 
 	/*
-	 * Species
+	 * ParticleSimulation
 	 */
 
-	class_<Species,typename std::auto_ptr<Species> >("Species",boost::python::init<double>())
-			.def("fill_uniform",Species_fill_uniform)
-			.def("fill_uniform",Species_fill_uniform_interface)
-			.def("get_concentration",Species_get_concentration1)
+	class_<ParticleSimulation>("ParticleSimulation")
+			.add_property("add_particles",&ParticleSimulation::add_particles)
+			.add_property("monte_carlo_timestep",&ParticleSimulation::monte_carlo_timestep<GayBernePotential>)
+			.add_property("Dtrans", &ParticleSimulation::getDtrans, &ParticleSimulation::setDtrans)
+			.add_property("Drot", &ParticleSimulation::getDrot, &ParticleSimulation::setDrot)
+			.add_property("dt", &ParticleSimulation::getDt, &ParticleSimulation::setDt)
+			.add_property("L", &ParticleSimulation::getL, &ParticleSimulation::setL)
+			.add_property("particles", &ParticleSimulation::getParticles, &ParticleSimulation::setParticles)
+			;
+
+}

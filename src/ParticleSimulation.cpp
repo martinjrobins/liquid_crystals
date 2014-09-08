@@ -153,7 +153,7 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 	}
 }
 
-template void ParticleSimulation::monte_carlo_timestep(const unsigned int n, GayBernePotential& potential);
+//template void ParticleSimulation::monte_carlo_timestep(const unsigned int n, GayBernePotential& potential);
 
 
 
