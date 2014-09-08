@@ -21,9 +21,9 @@ BOOST_PYTHON_MODULE(particle_simulation) {
 	/*
 	 * Particles
 	 */
-	class_<SpeciesType>("Particles")
-	        .def(boost::python::vector_indexing_suite<SpeciesType >())
-	    ;
+//	class_<SpeciesType>("Particles")
+//	        .def(boost::python::vector_indexing_suite<SpeciesType >())
+//	    ;
 
 
 	/*

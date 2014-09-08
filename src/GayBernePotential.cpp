@@ -17,7 +17,7 @@ double GayBernePotential::evaluate(Vect3d& x1, Vect3d& u1, Vect3d& x2,
 	double u1dotr = u1.dot(rhat);
 	double u2dotr = u2.dot(rhat);
 	double q = qfunc(udotu,u1dotr,u2dotr,r);
-	return 4*epsilon(udotu,u1dotr,u2dotr)(pow(q,12) - pow(q,6));
+	return 4*epsilon(udotu,u1dotr,u2dotr)*(pow(q,12) - pow(q,6));
 }
 
 double GayBernePotential::cut_off() {

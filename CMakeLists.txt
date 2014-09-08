@@ -11,5 +11,6 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined")
 
 include_directories(${VTK_INCLUDE_DIRS} ${Boost_INCLUDE_DIR}  ${PYTHON_INCLUDE_DIRS} src Aboria/src Aboria/eigen3)
 
-add_library (ParticleSimulation src/Python.cpp)
+file(GLOB ParticleSimulation_SOURCES "src/*.cpp")
+add_library (ParticleSimulation ${ParticleSimulation_SOURCES})
 TARGET_LINK_LIBRARIES(ParticleSimulation ${PYTHON_LIBRARIES} ${VTK_LIBRARIES})
