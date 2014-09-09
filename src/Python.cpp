@@ -9,11 +9,13 @@
 #include "Types.h"
 #include "ParticleSimulation.h"
 #include "GayBernePotential.h"
+#include "Aboria.h"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 using namespace Aboria;
 using namespace boost::python;
+
 
 template void ParticleSimulation::monte_carlo_timestep(const unsigned int n, GayBernePotential& potential);
 
@@ -92,7 +94,7 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	/*
 	 * Particles
 	 */
-	class_<SpeciesType>("Particles")
+	class_<SpeciesType,typename Aboria::ptr<SpeciesType> >("Particles")
 	        .def(boost::python::vector_indexing_suite<SpeciesType >())
 	        .def("get_grid",&SpeciesType::get_grid)
 	    ;

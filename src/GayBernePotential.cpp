@@ -12,6 +12,7 @@ double GayBernePotential::evaluate(const Vect3d &x1, const Vect3d &u1, const Vec
 	Vect3d dx = x2-x1;
 	double r = dx.norm();
 	Vect3d rhat = dx/r;
+	if (r==0) rhat<<0,0,0;
 	double udotu = u1.dot(u2);
 	double u1dotr = u1.dot(rhat);
 	double u2dotr = u2.dot(rhat);

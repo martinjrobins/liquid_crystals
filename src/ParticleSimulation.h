@@ -166,26 +166,28 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 					const double r2 = dx.squaredNorm();
 					if (r2 > diameter*diameter) continue;
 					if (j.get_id()==((*particles)[index]).get_id()) continue;
-					const double r = dx.norm();
-					const double overlap = diameter-r;
-					if (overlap>0) {
-						Udiff -= potential(candidate_pos,candidate_u,rj,uj);
-					}
+					Udiff -= potential(r,u,rj,uj);
 				}
+				Vect3d boundary_u(1,0,0);
+				Udiff -= potential(r,u,Vect3d(0,r[1],0),boundary_u);
+				Udiff -= potential(r,u,Vect3d(L,r[1],0),boundary_u);
+				Udiff -= potential(r,u,Vect3d(r[0],0,0),boundary_u);
+				Udiff -= potential(r,u,Vect3d(r[0],L,0),boundary_u);
+
 				for (auto tpl: particles->get_neighbours(candidate_pos)) {
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
 					const double r2 = dx.squaredNorm();
 					if (r2 > diameter*diameter) continue;
 					if (j.get_id()==((*particles)[index]).get_id()) continue;
-					const double r = dx.norm();
-					const double overlap = diameter-r;
-					if (overlap>0) {
-						Udiff += potential(candidate_pos,candidate_u,rj,uj);
-					}
+					Udiff += potential(candidate_pos,candidate_u,rj,uj);
 				}
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(0,r[1],0),boundary_u);
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(L,r[1],0),boundary_u);
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],0,0),boundary_u);
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],L,0),boundary_u);
 
 				const double acceptance_ratio = exp(-Udiff/Temp);
-				//std::cout <<"dU = "<<newU-oldU<<" acceptance_ratio = "<<acceptance_ratio<<std::endl;
+				std::cout <<"dU = "<<Udiff<<" acceptance_ratio = "<<acceptance_ratio<<std::endl;
 				if (uniformd(generator)<acceptance_ratio) {
 					//std::cout <<"accepted"<<std::endl;
 
