@@ -24,15 +24,18 @@ public:
 			xi_dash = (pow(kdash,1.0/mu) - 1) / (pow(kdash,1.0/mu) + 1);
 		}
 	}
-	double evaluate(Vect3d &x1, Vect3d &u1, Vect3d &x2, Vect3d &u2);
-	double cut_off();
+	double evaluate(const Vect3d &x1, const Vect3d &u1, const Vect3d &x2, const Vect3d &u2) const;
+	double operator()(const Vect3d &x1, const Vect3d &u1, const Vect3d &x2, const Vect3d &u2) const {
+		return evaluate(x1,u1,x2,u2);
+	}
+	double cut_off() const;
 	virtual ~GayBernePotential();
 private:
-	double epsilon(double udotu, double u1dotr, double u2dotr);
-	double epsilon(double udotu);
-	double epsilon_dash(double udotu, double u1dotr, double u2dotr);
-	double qfunc(double udotu, double u1dotr, double u2dotr, double r);
-	double sigma(double udotu, double u1dotr, double u2dotr);
+	double epsilon(const double udotu, const double u1dotr, const double u2dotr) const;
+	double epsilon(const double udotu) const;
+	double epsilon_dash(const double udotu, const double u1dotr, const double u2dotr) const;
+	double qfunc(const double udotu, const double u1dotr, const double u2dotr, const double r) const;
+	double sigma(const double udotu, const double u1dotr, const double u2dotr) const;
 	double k,kdash,mu,nu,xi,xi_dash,sigma_s,epsilon_0;
 };
 
