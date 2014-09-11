@@ -14,9 +14,10 @@ double GayBernePotential::evaluate(const Vect3d &x1, const Vect3d &u1, const Vec
 	double r = dx.norm();
 	Vect3d rhat = dx/r;
 	if (r==0) rhat = Vect3d(1,0,0);
-	if (r/sigma_s < 0.5) {
-		dx = rhat*sigma_s*0.5;
-		r = 0.5*sigma_s;
+	const double trunc = 0.1;
+	if (r/sigma_s < trunc) {
+		dx = rhat*sigma_s*trunc;
+		r = trunc*sigma_s;
 	}
 
 	double udotu = u1.dot(u2);
