@@ -1,12 +1,53 @@
 from particleSimulation import *
 from tvtk.api import tvtk
+from random import uniform
+from math import sqrt
 
 L = 1.0
+k = 3.0
+sigma_s = L/100.0
 
-sim = ParticleSimulation(Drot=1.0,Dtrans=1.0,Temp=1.0,dt=0.001,L=L)
+params = Params()
+params['Dtrans'] = 1.0
+params['Drot'] = 1.0
+params['Temp'] = 10.0
+params['dt'] = 0.0001
+params['L'] = L
 
-U = GayBernePotential(sigma_s=L/100.0,k=3,kdash=1.0/5.0,mu=2,nu=1,epsilon_0=1.0)
+particles = Particles()
+for i in range(100):
+    p = Particle()
+    p.position = Vect3d(uniform(0,L),uniform(0,L),0)
+    u = [uniform(0,L),uniform(0,L),0]
+    u = [i/sqrt(u[0]**2+u[1]**2) for i in u]
+    p.orientation = Vect3d(u)
+    particles.append(p)
+ 
 
-sim.add_particles(100)
-sim.monte_carlo_timestep(1,U)
-v = sim.particles.get_grid()
+U = GayBernePotential(sigma_s=sigma_s,k=k,kdash=1.0/5.0,mu=2,nu=1,epsilon_0=1.0)
+
+monte_carlo_timestep(100,particles,U,params)
+
+v = particles.get_grid()
+v._get_point_data().set_active_normals('orientation')
+arrow = tvtk.ArrowSource()
+glyph = tvtk.Glyph3D(source=arrow.output,input=v,scale_factor=sigma_s*k,vector_mode=True,orient=True)
+m = tvtk.PolyDataMapper(input=glyph.output)
+a = tvtk.Actor(mapper=m)
+ren = tvtk.Renderer()
+ren.add_actor(a)
+renWin = tvtk.RenderWindow(size=[800,600])
+renWin.add_renderer(ren)
+renWin.render()
+
+for i in range(1000):
+    print i
+    monte_carlo_timestep(100,particles,U,params)
+    v = particles.get_grid()
+    #glyph.input=v
+    glyph.modified()
+    renWin.render()
+    
+
+#renWinInt = tvtk.RenderWindowInteractor(render_window=renWin)
+#renWinInt.start()

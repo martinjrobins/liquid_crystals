@@ -136,17 +136,22 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 	const Vect3d low = particles->get_low();
 	const Vect3d high = particles->get_high();
 	int index;
+	unsigned int rejections = 0;
+	unsigned int rejects = 0;
+	unsigned int accepts = 0;
 
-	for (int i = 0; i < n; ++i) {
+	for (int j = 0; j < n; ++j) {
 		for (int ii = 0; ii < particles->size(); ++ii) {
+			rejections = 0;
 			while(1) {
 				/*
 				 * generate new state x'
 				 */
 				const int index = uniformd(generator)*particles->size();
-				REGISTER_SPECIES_PARTICLE(((*particles)[index]));
-				const Vect3d rand_inc = sqrt(2.0*Dtrans*dt)*Vect3d(normald(generator),normald(generator),0);
-				const double rand_inc2 = sqrt(2.0*Drot*dt)*normald(generator);
+				SpeciesType::value_type& i = (*particles)[index];
+				REGISTER_SPECIES_PARTICLE(i);
+				const Vect3d rand_inc = sqrt(2.0*Dtrans*dt)*Vect3d(i.rand_normal(),i.rand_normal(),0);
+				const double rand_inc2 = sqrt(2.0*Drot*dt)*i.rand_normal();
 				const double cosinc = cos(rand_inc2);
 				const double sininc = sin(rand_inc2);
 				Vect3d candidate_pos = r+rand_inc;
@@ -165,7 +170,7 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
 					const double r2 = dx.squaredNorm();
 					if (r2 > diameter*diameter) continue;
-					if (j.get_id()==((*particles)[index]).get_id()) continue;
+					if (j.get_id()==i.get_id()) continue;
 					Udiff -= potential(r,u,rj,uj);
 				}
 				Vect3d boundary_u(1,0,0);
@@ -178,7 +183,7 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
 					const double r2 = dx.squaredNorm();
 					if (r2 > diameter*diameter) continue;
-					if (j.get_id()==((*particles)[index]).get_id()) continue;
+					if (j.get_id()==i.get_id()) continue;
 					Udiff += potential(candidate_pos,candidate_u,rj,uj);
 				}
 				Udiff += potential(candidate_pos,candidate_u,Vect3d(0,r[1],0),boundary_u);
@@ -187,7 +192,7 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],L,0),boundary_u);
 
 				const double acceptance_ratio = exp(-Udiff/Temp);
-				std::cout <<"dU = "<<Udiff<<" acceptance_ratio = "<<acceptance_ratio<<std::endl;
+				//std::cout <<"dU = "<<Udiff<<" acceptance_ratio = "<<acceptance_ratio<<std::endl;
 				if (uniformd(generator)<acceptance_ratio) {
 					//std::cout <<"accepted"<<std::endl;
 
@@ -200,13 +205,22 @@ void ParticleSimulation::monte_carlo_timestep(const unsigned int n, T& potential
 							exits++;
 						}
 						u = candidate_u;
+						//std::cout <<"updating position to "<<candidate_pos<<std::endl;
 						return candidate_pos;
 					});
+					accepts++;
 					break;
+				} else {
+					rejects++;
+					if (rejections++ > 1000) {
+						ERROR("number of monte carlo rejections > 1000");
+					}
+
 				}
 			}
 		}
 	}
+	std::cout <<"finished monte carlo steps ratio of accepts to rejects is "<<double(accepts)/++rejects<<std::endl;
 }
 
 #endif /* PARTICLESIMULATION_H_ */

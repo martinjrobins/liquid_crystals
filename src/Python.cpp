@@ -9,9 +9,12 @@
 #include "Types.h"
 #include "ParticleSimulation.h"
 #include "GayBernePotential.h"
+#include "Algorithms.h"
 #include "Aboria.h"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+
 
 using namespace Aboria;
 using namespace boost::python;
@@ -62,6 +65,19 @@ struct Vect3_from_python_list
 
 };
 
+template<typename T>
+struct Vect3_to_python
+{
+    static PyObject* convert(Eigen::Matrix<T,3,1> const& s)
+      {
+    	boost::python::list ret;
+    	ret.append(s[0]);
+    	ret.append(s[1]);
+    	ret.append(s[2]);
+        return boost::python::incref(ret.ptr());
+      }
+};
+
 
 template<class T>
 struct vtkSmartPointer_to_python {
@@ -87,8 +103,34 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	VTK_PYTHON_CONVERSION(vtkUnstructuredGrid);
 
 	Vect3_from_python_list<double>();
-	Vect3_from_python_list<int>();
-	Vect3_from_python_list<bool>();
+//	Vect3_from_python_list<int>();
+//	Vect3_from_python_list<bool>();
+//	to_python_converter<
+//		Vect3d,
+//		Vect3_to_python<double> >();
+//	to_python_converter<
+//		Vect3i,
+//		Vect3_to_python<int> >();
+//	to_python_converter<
+//		Vect3b,
+//		Vect3_to_python<bool> >();
+
+	/*
+	 * map
+	 */
+	class_<std::map<std::string,double> >("Params")
+			.def(boost::python::map_indexing_suite<std::map<std::string,double> >())
+			;
+
+	class_<Vect3d,Aboria::ptr<Vect3d> >("Vect3d",init<>())
+			.def(init<const Vect3d&>())
+			.def(init<double,double,double>())
+			.def("norm",&Vect3d::norm)
+			.def(self + self)
+			.def(self - self)
+			.def(self / double())
+			.def(self_ns::str(self))
+			;
 
 
 	/*
@@ -103,33 +145,49 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	/*
 	 * Particle
 	 */
-	class_<SpeciesType::value_type>("Particle")
+#define ADD_PROPERTY(NUMBER) \
+		.add_property(DataNames<SpeciesTuple>::get(NUMBER).c_str(), \
+					make_function(&SpeciesType::value_type::get_data_elem<NUMBER>, \
+									return_value_policy<copy_non_const_reference>()), \
+					&SpeciesType::value_type::set_data_elem<NUMBER>)
+
+	class_<SpeciesType::value_type, Aboria::ptr<SpeciesType::value_type> >("Particle",init<>())
 		.add_property("id", &SpeciesType::value_type::get_id)
-		.def("position", &SpeciesType::value_type::get_position,
-				return_value_policy<reference_existing_object,
-				with_custodian_and_ward_postcall<0,1> >())
-		.def("data", &SpeciesType::value_type::get_data,
-				return_value_policy<reference_existing_object,
-				with_custodian_and_ward_postcall<0,1> >())
+		.add_property("position",  make_function(&SpeciesType::value_type::get_position,
+									return_value_policy<copy_const_reference>()),
+							&SpeciesType::value_type::set_position)
+		ADD_PROPERTY(SPECIES_VELOCITY)
+		ADD_PROPERTY(SPECIES_ORIENTATION)
+		ADD_PROPERTY(SPECIES_POTENTIAL)
+		ADD_PROPERTY(SPECIES_TOTAL_R)
+		ADD_PROPERTY(SPECIES_SAVED_R)
+		ADD_PROPERTY(SPECIES_SAVED_R1)
+		ADD_PROPERTY(SPECIES_NUM_EXITS)
 		;
 
+//	/*
+//	 * ParticleSimulation
+//	 */
+//
+//	class_<ParticleSimulation>("ParticleSimulation", init<>())
+//			.def(init<double,double,double,double,double>(
+//					(arg("Dtrans"),arg("Drot"),arg("Temp"),arg("dt"),arg("L"))))
+//			.def("add_particles",&ParticleSimulation::add_particles)
+//			.def("monte_carlo_timestep",&ParticleSimulation::monte_carlo_timestep<GayBernePotential>)
+//			.add_property("Dtrans", &ParticleSimulation::getDtrans, &ParticleSimulation::setDtrans)
+//			.add_property("Drot", &ParticleSimulation::getDrot, &ParticleSimulation::setDrot)
+//			.add_property("Temp", &ParticleSimulation::getTemp, &ParticleSimulation::setTemp)
+//			.add_property("dt", &ParticleSimulation::getDt, &ParticleSimulation::setDt)
+//			.add_property("L", &ParticleSimulation::getL, &ParticleSimulation::setL)
+//			.add_property("particles", &ParticleSimulation::getParticles, &ParticleSimulation::setParticles)
+//			;
 
 	/*
-	 * ParticleSimulation
+	 * Algorithms
 	 */
+	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,GayBernePotential>);
 
-	class_<ParticleSimulation>("ParticleSimulation", init<>())
-			.def(init<double,double,double,double,double>(
-					(arg("Dtrans"),arg("Drot"),arg("Temp"),arg("dt"),arg("L"))))
-			.def("add_particles",&ParticleSimulation::add_particles)
-			.def("monte_carlo_timestep",&ParticleSimulation::monte_carlo_timestep<GayBernePotential>)
-			.add_property("Dtrans", &ParticleSimulation::getDtrans, &ParticleSimulation::setDtrans)
-			.add_property("Drot", &ParticleSimulation::getDrot, &ParticleSimulation::setDrot)
-			.add_property("Temp", &ParticleSimulation::getTemp, &ParticleSimulation::setTemp)
-			.add_property("dt", &ParticleSimulation::getDt, &ParticleSimulation::setDt)
-			.add_property("L", &ParticleSimulation::getL, &ParticleSimulation::setL)
-			.add_property("particles", &ParticleSimulation::getParticles, &ParticleSimulation::setParticles)
-			;
+
 	/*
 	 * GayBernePotential
 	 */
