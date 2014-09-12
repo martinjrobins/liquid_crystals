@@ -42,7 +42,7 @@ void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > parti
 				typename Particles<DATA_TYPE>::value_type& i = (*particles)[index];
 				REGISTER_SPECIES_PARTICLE(i);
 				const Vect3d rand_inc = sqrt(2.0*Dtrans*dt)*Vect3d(i.rand_normal(),i.rand_normal(),0);
-				const double rand_inc2 = sqrt(2.0*Drot*dt)*i.rand_normal();
+				const double rand_inc2 = sqrt(2.0*Drot*dt)*(i.rand_normal());
 				const double cosinc = cos(rand_inc2);
 				const double sininc = sin(rand_inc2);
 				Vect3d candidate_pos = r+rand_inc;
@@ -70,11 +70,10 @@ void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > parti
 					if (j.get_id()==i.get_id()) continue;
 					Udiff -= potential(r,u,rj,uj);
 				}
-				Vect3d boundary_u(1,0,0);
-				Udiff -= potential(r,u,Vect3d(0,r[1],0),boundary_u);
-				Udiff -= potential(r,u,Vect3d(L,r[1],0),boundary_u);
-				Udiff -= potential(r,u,Vect3d(r[0],0,0),boundary_u);
-				Udiff -= potential(r,u,Vect3d(r[0],L,0),boundary_u);
+				Udiff -= potential(r,u,Vect3d(0,r[1],0),Vect3d(0,1,0));
+				Udiff -= potential(r,u,Vect3d(L,r[1],0),Vect3d(0,1,0));
+				Udiff -= potential(r,u,Vect3d(r[0],0,0),Vect3d(1,0,0));
+				Udiff -= potential(r,u,Vect3d(r[0],L,0),Vect3d(1,0,0));
 
 				for (auto tpl: particles->get_neighbours(candidate_pos)) {
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
@@ -83,13 +82,13 @@ void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > parti
 					if (j.get_id()==i.get_id()) continue;
 					Udiff += potential(candidate_pos,candidate_u,rj,uj);
 				}
-				Udiff += potential(candidate_pos,candidate_u,Vect3d(0,r[1],0),boundary_u);
-				Udiff += potential(candidate_pos,candidate_u,Vect3d(L,r[1],0),boundary_u);
-				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],0,0),boundary_u);
-				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],L,0),boundary_u);
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(0,r[1],0),Vect3d(0,1,0));
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(L,r[1],0),Vect3d(0,1,0));
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],0,0),Vect3d(1,0,0));
+				Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],L,0),Vect3d(1,0,0));
 
 				const double acceptance_ratio = exp(-Udiff/Temp);
-				//std::cout <<"dU = "<<Udiff<<" acceptance_ratio = "<<acceptance_ratio<<std::endl;
+				//std::cout <<"dU = "<<Udiff<<" T = "<<Temp<<"acceptance_ratio = "<<acceptance_ratio<<std::endl;
 				if ((*particles)[0].rand_uniform()<acceptance_ratio) {
 					//std::cout <<"accepted"<<std::endl;
 

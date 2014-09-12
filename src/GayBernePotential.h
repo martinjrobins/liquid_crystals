@@ -19,7 +19,6 @@ public:
 		xi = (pow(k,2) - 1) / (pow(k,2) + 1);
 		if (mu == 1) {
 			xi_dash = (pow(kdash,1) - 1) / (pow(kdash,1) + 1);
-
 		} else {
 			xi_dash = (pow(kdash,1.0/mu) - 1) / (pow(kdash,1.0/mu) + 1);
 		}

@@ -7,8 +7,9 @@
 
 
 #include "Types.h"
-#include "ParticleSimulation.h"
 #include "GayBernePotential.h"
+#include "HGOPotential.h"
+#include "LabwohlLasherPotential.h"
 #include "Algorithms.h"
 #include "Aboria.h"
 #include <boost/python.hpp>
@@ -20,7 +21,7 @@ using namespace Aboria;
 using namespace boost::python;
 
 
-template void ParticleSimulation::monte_carlo_timestep(const unsigned int n, GayBernePotential& potential);
+//template void ParticleSimulation::monte_carlo_timestep(const unsigned int n, GayBernePotential& potential);
 
 template<typename T>
 struct Vect3_from_python_list
@@ -186,6 +187,8 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	 * Algorithms
 	 */
 	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,GayBernePotential>);
+	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,HGOPotential>);
+	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,LabwohlLasherPotential>);
 
 
 	/*
@@ -195,6 +198,16 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	class_<GayBernePotential>("GayBernePotential", init<double, double, double, double, double, double>(
 			(arg("sigma_s"),arg("k"),arg("kdash"),arg("mu"),arg("nu"),arg("epsilon_0"))))
 			.def("evaluate",&GayBernePotential::evaluate)
+			;
+
+	class_<HGOPotential>("HGOPotential", init<double, double>(
+			(arg("sigma_s"),arg("k"))))
+			.def("evaluate",&HGOPotential::evaluate)
+			;
+
+	class_<LabwohlLasherPotential>("LabwohlLasherPotential", init<double, double>(
+			(arg("epsilon"),arg("lattice_spacing"))))
+			.def("evaluate",&LabwohlLasherPotential::evaluate)
 			;
 
 

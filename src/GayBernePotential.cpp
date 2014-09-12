@@ -14,7 +14,7 @@ double GayBernePotential::evaluate(const Vect3d &x1, const Vect3d &u1, const Vec
 	double r = dx.norm();
 	Vect3d rhat = dx/r;
 	if (r==0) rhat = Vect3d(1,0,0);
-	const double trunc = 0.1;
+	const double trunc = 0.000001;
 	if (r/sigma_s < trunc) {
 		dx = rhat*sigma_s*trunc;
 		r = trunc*sigma_s;
@@ -39,7 +39,7 @@ GayBernePotential::~GayBernePotential() {
 }
 
 double GayBernePotential::epsilon(const double udotu, const double u1dotr, const double u2dotr) const {
-	return epsilon_0 * pow(epsilon_dash(udotu,u1dotr,u2dotr),mu) * pow(epsilon(udotu),nu);
+	return epsilon_0 * pow(epsilon_dash(udotu,u1dotr,u2dotr),mu) / pow(epsilon(udotu),nu);
 }
 
 double GayBernePotential::epsilon_dash(const double udotu, const double u1dotr, const double u2dotr) const {
@@ -60,7 +60,7 @@ double GayBernePotential::sigma(const double udotu, const double u1dotr, const d
 	double first = pow(u1dotr + u2dotr,2) / (1 + xi*udotu);
 	double second = pow(u1dotr - u2dotr,2) / (1 - xi*udotu);
 	//if (isnan(sigma_s*sqrt(1 - (xi/2.0) * (first + second)))) std::cout << "(xi/2.0) * (first + second) = "<<(xi/2.0) * (first + second)<<" 1+xi*udotu "<<1 + xi*udotu<< "1-xi*udotu "<<1 - xi*udotu <<std::endl;
-	return sigma_s*sqrt(1 - (xi/2.0) * (first + second));
+	return sigma_s/sqrt(1 - (xi/2.0) * (first + second));
 }
 
 
