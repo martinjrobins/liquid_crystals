@@ -5,8 +5,17 @@
 #include "Aboria.h"
 
 template<typename DATA_TYPE, typename POTENTIAL>
-void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > particles, POTENTIAL& potential, std::map<std::string,double> &params) {
+double monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > particles, POTENTIAL& potential, std::map<std::string,double> &params) {
 	std::cout << "starting monte_carlo_timestep"<<std::endl;
+
+	Particles<DATA_TYPE> start_copy(*particles);
+
+	std::for_each(particles->begin(),particles->end(),[](SpeciesType::Value& i) {
+		REGISTER_SPECIES_PARTICLE(i);
+		n = 1;
+		ra = r;
+		ua = u;
+	});
 
 	const double Dtrans = params["Dtrans"];
 	const double Drot = params["Drot"];
@@ -94,13 +103,11 @@ void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > parti
 
 					particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&particles,&candidate_pos,&rand_inc,&candidate_u](SpeciesType::Value& i) {
 						REGISTER_SPECIES_PARTICLE(i);
-						rt += rand_inc;
-						const Vect3d non_periodic_position = r+rand_inc;
-						if ((non_periodic_position.array() < particles->get_low().array()).any() ||
-								(non_periodic_position.array() >= particles->get_high().array()).any()) {
-							exits++;
-						}
+
 						u = candidate_u;
+						ua = (u + n*ua)/(n+1);
+						ra = (candidate_pos + n*ra)/(n+1);
+						n++;
 						//std::cout <<"updating position to "<<candidate_pos<<std::endl;
 						return candidate_pos;
 					});
@@ -118,6 +125,19 @@ void monte_carlo_timestep(const unsigned int n, ptr<Particles<DATA_TYPE> > parti
 		}
 	}
 	std::cout <<"finished monte carlo steps ratio of accepts to rejects is "<<double(accepts)/++rejects<<std::endl;
+
+	double tau = 0;
+	for (int i = 0; i < particles->size(); ++i) {
+		typename Particles<DATA_TYPE>::value_type& start = start_copy[i];
+		typename Particles<DATA_TYPE>::value_type& end = (*particles)[i];
+		GET_TUPLE(Vect3d,ua1,SPECIES_AVERAGED_ORIENTATION,start);
+		GET_TUPLE(Vect3d,ua2,SPECIES_AVERAGED_ORIENTATION,end);
+		tau += pow(acos(ua2.dot(ua1)),2);
+		//tau += (ua2-ua1).squaredNorm();
+	}
+	tau = sqrt(tau);
+
+	return tau;
 }
 
 #endif

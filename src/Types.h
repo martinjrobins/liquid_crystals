@@ -15,15 +15,15 @@ using namespace Aboria;
 
 const double k_b = 1.3806488e-23;
 
-enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_TOTAL_R,SPECIES_SAVED_R,SPECIES_SAVED_R1,SPECIES_NUM_EXITS};
-typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,Vect3d,unsigned int> SpeciesTuple;
+enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_AVERAGED_ORIENTATION,SPECIES_AVERAGED_POSITION,SPECIES_NUM_MOVES};
+typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,unsigned int> SpeciesTuple;
 typedef Particles<SpeciesTuple> SpeciesType;
 namespace Aboria {
 template <>
 class DataNames<SpeciesTuple> {
 public:
 	std::string static get(unsigned int n) {
-		std::string ret[7] = {"velocity","orientation","potential","total_r","saved_r","saved_r1","num_exits"};
+		std::string ret[7] = {"velocity","orientation","potential","averaged_orientation","averaged_position","number_of_moves"};
 		return ret[n];
 	}
 };
@@ -34,11 +34,10 @@ public:
 				const Vect3d& r = particle.get_position(); \
 				const bool alive = particle.is_alive(); \
 				GET_TUPLE(double,U,SPECIES_POTENTIAL,particle); \
-				GET_TUPLE(unsigned int,exits,SPECIES_NUM_EXITS,particle); \
-				GET_TUPLE(Vect3d,r0,SPECIES_SAVED_R,particle); \
 				GET_TUPLE(Vect3d,u,SPECIES_ORIENTATION,particle); \
-				GET_TUPLE(Vect3d,rt,SPECIES_TOTAL_R,particle); \
-				GET_TUPLE(Vect3d,r1,SPECIES_SAVED_R1,particle); \
+				GET_TUPLE(Vect3d,ra,SPECIES_AVERAGED_POSITION,particle); \
+				GET_TUPLE(Vect3d,ua,SPECIES_AVERAGED_ORIENTATION,particle); \
+				GET_TUPLE(unsigned int,n,SPECIES_NUM_MOVES,particle); \
 				GET_TUPLE(Vect3d,v,SPECIES_VELOCITY,particle);
 #define GET_TUPLE_CONST(type,name,position,particle) const type& name = std::get<position>(particle.get_data_const())
 #define REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tuple) \
