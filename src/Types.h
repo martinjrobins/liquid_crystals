@@ -47,6 +47,8 @@ public:
 				const bool alivej = j.is_alive(); \
 				GET_TUPLE_CONST(double,Uj,SPECIES_POTENTIAL,j); \
 				GET_TUPLE_CONST(Vect3d,uj,SPECIES_ORIENTATION,j); \
+				GET_TUPLE_CONST(Vect3d,raj,SPECIES_AVERAGED_POSITION,j); \
+				GET_TUPLE_CONST(Vect3d,uaj,SPECIES_AVERAGED_ORIENTATION,j); \
 				GET_TUPLE_CONST(Vect3d,vj,SPECIES_VELOCITY,j);
 
 
