@@ -13,15 +13,16 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 	std::for_each(particles->begin(),particles->end(),[](SpeciesType::Value& i) {
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
+		ra = r;
+		ua = u;
 	});
 
 	const double Dtrans = params["Dtrans"];
 	const double Drot = params["Drot"];
 	const double Temp = params["Temp"];
-	const double dt = params["dt"];
 	const double L = params["L"];
 
-	std::cout <<"running with Dtrans = "<<Dtrans<<" Drot = "<<Drot<<" Temp = "<<Temp<<" dt = "<<dt<<" L = "<<L<<std::endl;
+	std::cout <<"running with Dtrans = "<<Dtrans<<" Drot = "<<Drot<<" Temp = "<<Temp<<" L = "<<L<<std::endl;
 
 	const double buffer = L/10.0;
 	const Vect3d min(-buffer,-buffer,-2*buffer);
@@ -48,11 +49,13 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			const int index = ii;
 			typename Particles<DATA_TYPE>::value_type& i = (*particles)[index];
 			REGISTER_SPECIES_PARTICLE(i);
+			if (fixed) continue;
 			ua = (u + n*ua)/(n+1);
 			ra = (r + n*ra)/(n+1);
 			n++;
-			const Vect3d rand_inc = sqrt(2.0*Dtrans*dt)*Vect3d(i.rand_normal(),i.rand_normal(),0);
-			const double rand_inc2 = sqrt(2.0*Drot*dt)*(i.rand_normal());
+
+			const Vect3d rand_inc = Dtrans*Vect3d(i.rand_uniform()-0.5,i.rand_uniform()-0.5,0);
+			const double rand_inc2 = Drot*(i.rand_uniform()-0.5);
 			const double cosinc = cos(rand_inc2);
 			const double sininc = sin(rand_inc2);
 			Vect3d candidate_pos = r+rand_inc;
@@ -60,17 +63,6 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			candidate_u.normalize();
 			if ((candidate_pos[0]<0)||(candidate_pos[0]>=L)) continue;
 			if ((candidate_pos[1]<0)||(candidate_pos[1]>=L)) continue;
-			//
-			//				for (int d = 0; d < 3; ++d) {
-			//					if (candidate_pos[d]<low[d]) {
-			//						//candidate_pos[d] += (high[d]-low[d]);
-			//						continue;
-			//					}
-			//					if (candidate_pos[d]>=high[d]) {
-			//						//candidate_pos[d] -= (high[d]-low[d]);
-			//						continue;
-			//					}
-			//				}
 
 			double Udiff = 0;
 			for (auto tpl: particles->get_neighbours(r)) {
@@ -80,10 +72,6 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 				if (j.get_id()==i.get_id()) continue;
 				Udiff -= potential(r,u,rj,uj);
 			}
-			Udiff -= potential(r,u,Vect3d(0,r[1],0),Vect3d(0,1,0));
-			Udiff -= potential(r,u,Vect3d(L,r[1],0),Vect3d(0,1,0));
-			Udiff -= potential(r,u,Vect3d(r[0],0,0),Vect3d(1,0,0));
-			Udiff -= potential(r,u,Vect3d(r[0],L,0),Vect3d(1,0,0));
 
 			for (auto tpl: particles->get_neighbours(candidate_pos)) {
 				REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
@@ -92,10 +80,6 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 				if (j.get_id()==i.get_id()) continue;
 				Udiff += potential(candidate_pos,candidate_u,rj,uj);
 			}
-			Udiff += potential(candidate_pos,candidate_u,Vect3d(0,r[1],0),Vect3d(0,1,0));
-			Udiff += potential(candidate_pos,candidate_u,Vect3d(L,r[1],0),Vect3d(0,1,0));
-			Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],0,0),Vect3d(1,0,0));
-			Udiff += potential(candidate_pos,candidate_u,Vect3d(r[0],L,0),Vect3d(1,0,0));
 
 			const double acceptance_ratio = exp(-Udiff/Temp);
 			//std::cout <<"dU = "<<Udiff<<" T = "<<Temp<<"acceptance_ratio = "<<acceptance_ratio<<std::endl;
@@ -119,19 +103,16 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 		}
 	}
 	std::cout <<"finished monte carlo steps ratio of accepts to rejects is "<<double(accepts)/++rejects<<std::endl;
-//
-//	double tau = 0;
-//	for (int i = 0; i < particles->size(); ++i) {
-//		typename Particles<DATA_TYPE>::value_type& start = start_copy[i];
-//		typename Particles<DATA_TYPE>::value_type& end = (*particles)[i];
-//		GET_TUPLE(Vect3d,ua1,SPECIES_AVERAGED_ORIENTATION,start);
-//		GET_TUPLE(Vect3d,ua2,SPECIES_AVERAGED_ORIENTATION,end);
-//		tau += pow(acos(ua2.dot(ua1)),2);
-//		//tau += (ua2-ua1).squaredNorm();
-//	}
-//	tau = sqrt(tau);
 
-	std::for_each(particles->begin(),particles->end(),[particles,&potential,diameter](SpeciesType::Value& i) {
+	particles->update_positions(particles->begin(),particles->end(),[&particles](SpeciesType::Value& i) {
+		REGISTER_SPECIES_PARTICLE(i);
+		//std::cout <<"updating position to "<<candidate_pos<<std::endl;
+		const Vect3d averaged_pos = ra;
+		ra = r;
+		return averaged_pos;
+	});
+
+	std::for_each(particles->begin(),particles->end(),[particles,&potential,diameter,L](SpeciesType::Value& i) {
 		REGISTER_SPECIES_PARTICLE(i);
 		U = 0;
 		for (auto tpl: particles->get_neighbours(r)) {
@@ -139,8 +120,17 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			const double r2 = dx.squaredNorm();
 			if (r2 > diameter*diameter) continue;
 			if (j.get_id()==i.get_id()) continue;
-			U += potential(r,ua,rj,uaj);
+			if (fixed && fixedj) continue;
+			U += 0.5*potential(r,ua,rj,uaj);
 		}
+	});
+
+	particles->update_positions(particles->begin(),particles->end(),[&particles](SpeciesType::Value& i) {
+		REGISTER_SPECIES_PARTICLE(i);
+		//std::cout <<"updating position to "<<candidate_pos<<std::endl;
+		const Vect3d original_pos = ra;
+		ra = r;
+		return original_pos;
 	});
 
 	return std::accumulate(particles->begin(), particles->end(), 0.0, [](double U, SpeciesType::Value& i){
