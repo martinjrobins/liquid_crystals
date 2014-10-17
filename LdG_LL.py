@@ -134,7 +134,18 @@ for i in range(N+1):
         particles.append(p)
      
     
- U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
+U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
+ 
+c = 3*eps
+ 
+class corners(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0]**2 + x[1]**2 <= c or \
+                       x[0]**2 + (x[1]-1.0)**2 <= c \
+                       (x[0]-1.0)**2 + x[1]**2 <= c \
+                       (x[0]-1.0)**2 + (x[1]-1.0)**2 <= c \
+                    else False
+
 
 for i in range(100):
     set boundary particles

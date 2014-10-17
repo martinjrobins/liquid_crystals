@@ -95,6 +95,8 @@ for run in range(100):
     v = particles.get_grid()
     glyph.modified()
     png_show(ren,filename='%s/final%04d'%(out_dir,run),width=800,height=800)	
+    w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/final%04d.vtu'%(out_dir,run))
+    w.write()
     f.close()
     
     

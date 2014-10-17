@@ -13,7 +13,7 @@ from png_show import png_show
 L = 50.0
 k = 3.0
 sigma_s = 0.5
-rho = 0.3
+rho = 0.6
 rot_step = 2*pi/50
 diff_step = sigma_s/50
 T = 3.2
@@ -107,7 +107,7 @@ f = open('%s/U%04d'%(out_dir,run), 'w')
 params['Dtrans'] = diff_step
 params['Drot'] = rot_step
 
-for batch in range(50):
+for batch in range(200):
     tau = monte_carlo_timestep(N_b,particles,U_hgo,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
@@ -115,6 +115,9 @@ for batch in range(50):
     v = particles.get_grid()
     glyph.modified()
     png_show(ren,filename='%s/batch%04d'%(out_dir,batch),width=800,height=800)
+    
+w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/final.vtu'%(out_dir))
+w.write()
     
 f.close()
   

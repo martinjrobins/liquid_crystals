@@ -110,7 +110,7 @@ f = open('%s/U%04d'%(out_dir,run), 'w')
 params['Dtrans'] = diff_step
 params['Drot'] = rot_step
 
-for batch in range(50):
+for batch in range(200):
     tau = monte_carlo_timestep(N_b,particles,U,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
@@ -120,4 +120,6 @@ for batch in range(50):
     png_show(ren,filename='%s/batch%04d'%(out_dir,batch),width=800,height=800)
     
 f.close()
+w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/final.vtu'%(out_dir))
+w.write()
   
