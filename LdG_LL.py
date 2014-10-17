@@ -92,8 +92,56 @@ v = TestFunction(V)
 F = inner(grad(Q[0]), grad(v[0]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[0]*v[0]*dx() + \
     inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
 
-# Compute solution
-solve(F == 0, Q, bc, solver_parameters={"newton_solver":
+
+L = 50.0
+rot_step = 2*pi/20
+diff_step = 0
+T = 0.05
+N = 50
+N_b = 10**4
+tau_s = 10**(-3)
+
+params = Params()
+params['Dtrans'] = diff_step
+params['Drot'] = rot_step
+params['Temp'] = T
+params['L'] = L
+out_dir = 'out/LL'
+
+
+particles = Particles()
+for i in range(N+1):
+    for j in range(N+1):
+        p = Particle()
+        p.position = Vect3d(i,j,0)
+        p.averaged_position = p.position
+        u = [0,0,0]
+        p.fixed = True
+        if (i==0) or (i==N):
+            if (j==0) or (j==N):
+                continue
+            u = [0,1,0]
+        elif (j==0) or (j==N):
+            if (i==0) or (i==N):
+                continue
+            u = [1,0,0]
+        else:
+            theta = uniform(0,2*pi)
+            u = [cos(theta),sin(theta),0]
+            p.fixed = False
+        p.orientation = Vect3d(u)
+        p.averaged_orientation = p.orientation
+        particles.append(p)
+     
+    
+ U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
+
+for i in range(100):
+    set boundary particles
+    run particles
+    get new bc
+    # Compute solution
+    solve(F == 0, Q, bc, solver_parameters={"newton_solver":
                                         {"relative_tolerance": 1e-6}})
 (Q11, Q12) = Q.split()
 
