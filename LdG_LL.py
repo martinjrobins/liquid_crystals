@@ -138,13 +138,15 @@ U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
  
 c = 3*eps
  
-class corners(SubDomain):
+class corners0(SubDomain):
     def inside(self, x, on_boundary):
         return True if x[0]**2 + x[1]**2 <= c or \
                        x[0]**2 + (x[1]-1.0)**2 <= c \
                        (x[0]-1.0)**2 + x[1]**2 <= c \
                        (x[0]-1.0)**2 + (x[1]-1.0)**2 <= c \
                     else False
+                    
+corners = MeshFunction("uint", mesh, 2)
 
 
 for i in range(100):
