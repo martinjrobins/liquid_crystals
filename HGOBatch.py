@@ -41,8 +41,7 @@ for i in range(N):
     p = Particle()
     eps = sigma_s
     p.position = Vect3d(uniform(eps,L-eps),uniform(eps,L-eps),0)
-    theta = uniform(0,2*pi)
-    u = [cos(theta),sin(theta),0]
+    p.theta = uniform(0,2*pi)
     p.orientation = Vect3d(u)
     p.fixed = False
     particles.append(p)
@@ -53,25 +52,25 @@ spacing = L/n_side
 for i in range(n_side):
     p = Particle()
     p.position = Vect3d(0,(i+0.5)*spacing,0)
-    p.orientation = Vect3d(0,1,0)
+    p.theta = pi/2
     p.fixed = True
     particles.append(p)
     
     p = Particle()
     p.position = Vect3d(L,(i+0.5)*spacing,0)
-    p.orientation = Vect3d(0,1,0)
+    p.theta = pi/2
     p.fixed = True
     particles.append(p)
     
     p = Particle()
     p.position = Vect3d((i+0.5)*spacing,0,0)
-    p.orientation = Vect3d(1,0,0)
+    p.theta = 0
     p.fixed = True
     particles.append(p)
     
     p = Particle()
     p.position = Vect3d((i+0.5)*spacing,L,0)
-    p.orientation = Vect3d(1,0,0)
+    p.theta = 0
     p.fixed = True
     particles.append(p)
  
