@@ -18,9 +18,9 @@ public:
 		k(k),kdash(kdash),mu(mu),nu(nu),sigma_s(sigma_s),epsilon_0(epsilon_0) {
 		xi = (pow(k,2) - 1) / (pow(k,2) + 1);
 		if (mu == 1) {
-			xi_dash = (pow(kdash,1) - 1) / (pow(kdash,1) + 1);
+			xi_dash = (1 - pow(kdash,1)) / (1 + pow(kdash,1));
 		} else {
-			xi_dash = (pow(kdash,1.0/mu) - 1) / (pow(kdash,1.0/mu) + 1);
+			xi_dash = (1 - pow(kdash,1.0/mu)) / (1 + pow(kdash,1.0/mu));
 		}
 	}
 	double evaluate(const Vect3d &x1, const Vect3d &u1, const Vect3d &x2, const Vect3d &u2) const;

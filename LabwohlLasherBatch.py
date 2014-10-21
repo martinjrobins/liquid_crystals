@@ -37,16 +37,16 @@ for run in range(100):
             p = Particle()
             p.position = Vect3d(i,j,0)
             p.averaged_position = p.position
-            u = [0,0,0]
+            p.theta = 0
             p.fixed = True
             if (i==0) or (i==N):
                 if (j==0) or (j==N):
                     continue
-                u = [0,1,0]
+                p.theta = pi/2
             elif (j==0) or (j==N):
                 if (i==0) or (i==N):
                     continue
-                u = [1,0,0]
+                p.theta = 0
             else:
                 theta = uniform(0,2*pi)
                 u = [cos(theta),sin(theta),0]
