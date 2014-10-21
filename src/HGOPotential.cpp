@@ -36,7 +36,8 @@ double HGOPotential::evaluate(const Vect3d& x1, const Vect3d& u1,
 	double u1dotr = u1.dot(rhat);
 	double u2dotr = u2.dot(rhat);
 	if (r < sigma(udotu,u1dotr,u2dotr)) {
-		return 0.001*std::numeric_limits<double>::max();
+		//return 0.001*std::numeric_limits<double>::max();
+		return 1.0;
 	} else {
 		return 0;
 	}

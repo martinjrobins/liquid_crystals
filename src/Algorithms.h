@@ -14,7 +14,7 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
 		ra = r;
-		ua = u;
+		thetaa = theta;
 	});
 
 	const double Dtrans = params["Dtrans"];
@@ -49,20 +49,27 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			const int index = ii;
 			typename Particles<DATA_TYPE>::value_type& i = (*particles)[index];
 			REGISTER_SPECIES_PARTICLE(i);
-			if (fixed) continue;
-			ua = (u + n*ua)/(n+1);
+			thetaa = (theta + n*thetaa)/(n+1);
+			ua = Vect3d(cos(thetaa),sin(thetaa),0);
 			ra = (r + n*ra)/(n+1);
 			n++;
+			if (fixed) continue;
 
 			const Vect3d rand_inc = Dtrans*Vect3d(i.rand_uniform()-0.5,i.rand_uniform()-0.5,0);
 			const double rand_inc2 = Drot*(i.rand_uniform()-0.5);
-			const double cosinc = cos(rand_inc2);
-			const double sininc = sin(rand_inc2);
 			Vect3d candidate_pos = r+rand_inc;
-			Vect3d candidate_u(u[0]*cosinc - u[1]*sininc, u[0]*sininc + u[1]*cosinc,u[2]);
-			candidate_u.normalize();
-			if ((candidate_pos[0]<0)||(candidate_pos[0]>=L)) continue;
-			if ((candidate_pos[1]<0)||(candidate_pos[1]>=L)) continue;
+			double candidate_theta = theta+rand_inc2;
+			Vect3d current_u(cos(theta),sin(theta),0);
+			Vect3d candidate_u(cos(candidate_theta),sin(candidate_theta),0);
+			if ((candidate_pos[0]<0)||(candidate_pos[0]>=L)) {
+				rejects++;	
+				continue;
+			}
+			if ((candidate_pos[1]<0)||(candidate_pos[1]>=L)) {
+				rejects++;	
+				continue;
+			}
+	 
 
 			double Udiff = 0;
 			for (auto tpl: particles->get_neighbours(r)) {
@@ -70,7 +77,7 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 				const double r2 = dx.squaredNorm();
 				if (r2 > diameter*diameter) continue;
 				if (j.get_id()==i.get_id()) continue;
-				Udiff -= potential(r,u,rj,uj);
+				Udiff -= potential(r,current_u,rj,uj);
 			}
 
 			for (auto tpl: particles->get_neighbours(candidate_pos)) {
@@ -83,13 +90,14 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 
 			const double acceptance_ratio = exp(-Udiff/Temp);
 			//std::cout <<"dU = "<<Udiff<<" T = "<<Temp<<"acceptance_ratio = "<<acceptance_ratio<<std::endl;
-			if ((*particles)[0].rand_uniform()<acceptance_ratio) {
+			if ((Udiff <= 0) || ((*particles)[0].rand_uniform()<acceptance_ratio)) {
 				//std::cout <<"accepted"<<std::endl;
 
-				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&particles,&candidate_pos,&rand_inc,&candidate_u](SpeciesType::Value& i) {
+				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&particles,&candidate_pos,&rand_inc,&candidate_theta](SpeciesType::Value& i) {
 					REGISTER_SPECIES_PARTICLE(i);
 					//std::cout <<"updating position to "<<candidate_pos<<std::endl;
-					u = candidate_u;
+					theta = candidate_theta;
+					u = Vect3d(cos(theta),sin(theta),0);
 					return candidate_pos;
 				});
 				accepts++;
@@ -123,6 +131,7 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			if (fixed && fixedj) continue;
 			U += 0.5*potential(r,ua,rj,uaj);
 		}
+
 	});
 
 	particles->update_positions(particles->begin(),particles->end(),[&particles](SpeciesType::Value& i) {

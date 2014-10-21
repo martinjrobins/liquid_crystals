@@ -13,10 +13,10 @@ from png_show import png_show
 L = 50.0
 k = 3.0
 sigma_s = 0.5
-rho = 0.6
-rot_step = 2*pi/50
-diff_step = sigma_s/50
-T = 3.2
+rho = 0.3
+rot_step = 2*pi/5
+diff_step = sigma_s/0.4
+T = 0.0000000001
 area = (1.0/4.0)*pi*k*sigma_s**2
 N = int(rho*L**2/area)
 
@@ -25,8 +25,8 @@ N_b = 10**4
 tau_s = 10**(-4)
 
 params = Params()
-params['Dtrans'] = diff_step*50
-params['Drot'] = rot_step*50
+params['Dtrans'] = diff_step
+params['Drot'] = rot_step
 params['Temp'] = T
 
 params['L'] = L
@@ -78,7 +78,7 @@ for i in range(n_side):
 U_hgo = HGOPotential(sigma_s=sigma_s,k=k)
 
 v = particles.get_grid()
-v._get_point_data().set_active_normals('orientation')
+v._get_point_data().set_active_normals('averaged_orientation')
 ellipse = tvtk.ParametricEllipsoid(x_radius=sigma_s*k/2.0,y_radius=sigma_s/2.0,z_radius=sigma_s/2.0)
 ellipse_source = tvtk.ParametricFunctionSource(parametric_function=ellipse,u_resolution=8,v_resolution=8,w_resolution=8)
 domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
