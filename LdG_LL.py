@@ -8,6 +8,7 @@ Created on Wed Oct 15 14:17:38 2014
 from dolfin import *
 
 # Create mesh
+
 mesh = UnitSquare(50,50)
 def bottom(x, on_boundary):
     return near(x[1],0.0) and on_boundary
@@ -92,8 +93,8 @@ v = TestFunction(V)
 F = inner(grad(Q[0]), grad(v[0]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[0]*v[0]*dx() + \
     inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
 
-
-L = 50.0
+L = 1.0
+psep = L/N
 rot_step = 2*pi/20
 diff_step = 0
 T = 0.05
@@ -113,7 +114,7 @@ particles = Particles()
 for i in range(N+1):
     for j in range(N+1):
         p = Particle()
-        p.position = Vect3d(i,j,0)
+        p.position = Vect3d(i*psep,j*psep,0)
         p.averaged_position = p.position
         u = [0,0,0]
         p.fixed = True
@@ -138,24 +139,60 @@ U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
  
 c = 3*eps
  
-class corners0(SubDomain):
-    def inside(self, x, on_boundary):
-        return True if x[0]**2 + x[1]**2 <= c or \
+ 
+ 
+def in_corners(x):
+    return True if x[0]**2 + x[1]**2 <= c or \
                        x[0]**2 + (x[1]-1.0)**2 <= c \
                        (x[0]-1.0)**2 + x[1]**2 <= c \
                        (x[0]-1.0)**2 + (x[1]-1.0)**2 <= c \
-                    else False
+                else False
                     
-corners = MeshFunction("uint", mesh, 2)
+corner = MeshFunction("uint", mesh, 0)
+lattice_index = MeshFunction("uint", mesh, 0)
 
+for i in range(mesh.num_vertices()):
+    x = mesh.coordinates()[i]
+    lattice_i = int(x[0]/psep + 0.5)
+    lattice_j = int(x[1]/psep + 0.5)
+    li = (N+1)*i + j
+    lattice_index.array()[i] = li
+    if in_corners(x):
+        corner.array()[i] = 1
+    else:
+        corner.array()[i] = 0
+        particles[li].fixed = True
 
-for i in range(100):
-    set boundary particles
-    run particles
-    get new bc
-    # Compute solution
+    
+
+latticeFunc = Function(V)
+bc_corners = DirichletBC(V, in_corners, latticeFunc, method='pointwise')
+bc.append(bc_corners)
+
+for i in range(10):
+    #set lattice particles according to continuum verticies
+    for i in range(mesh.num_vertices()):
+        li = lattice_index.array()[i]
+        if corner.array()[i] == 0:
+            Q11 = Q.vector()[i][0]
+            theta = acos(Q11)/2.0
+            particles[li].orientation = Vect3d(cos(theta),sin(theta))
+            
+    #run lattice monte carlo
+    tau = monte_carlo_timestep(N_b,particles,U,params)
+
+    #set continuum verticies according to lattice orientations
+    for i in range(mesh.num_vertices()):
+        li = lattice_index.array()[i]
+        u = particles[li].orientation
+        theta = acos(u[0])
+        print 'u = ',u,' theta = ',theta
+        latticeFunc.vector()[i] = [cos(2*theta),sin(2*theta)]
+    
+    #solve continuum model
     solve(F == 0, Q, bc, solver_parameters={"newton_solver":
                                         {"relative_tolerance": 1e-6}})
+                                        
 (Q11, Q12) = Q.split()
 
 # Plot sigma and u
