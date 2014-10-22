@@ -15,6 +15,8 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 		n = 0;
 		ra = r;
 		thetaa = theta;
+		u = Vect3d(cos(theta),sin(theta),0);
+		ua = u;
 	});
 
 	const double Dtrans = params["Dtrans"];
@@ -45,8 +47,8 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			/*
 			 * generate new state x'
 			 */
-			//const int index = (*particles)[0].rand_uniform()*particles->size();
-			const int index = ii;
+			const int index = (*particles)[0].rand_uniform()*particles->size();
+			//const int index = ii;
 			typename Particles<DATA_TYPE>::value_type& i = (*particles)[index];
 			REGISTER_SPECIES_PARTICLE(i);
 			thetaa = (theta + n*thetaa)/(n+1);
@@ -93,7 +95,7 @@ double monte_carlo_timestep(const unsigned int Nb, ptr<Particles<DATA_TYPE> > pa
 			if ((Udiff <= 0) || ((*particles)[0].rand_uniform()<acceptance_ratio)) {
 				//std::cout <<"accepted"<<std::endl;
 
-				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&particles,&candidate_pos,&rand_inc,&candidate_theta](SpeciesType::Value& i) {
+				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&candidate_pos,&candidate_theta](SpeciesType::Value& i) {
 					REGISTER_SPECIES_PARTICLE(i);
 					//std::cout <<"updating position to "<<candidate_pos<<std::endl;
 					theta = candidate_theta;

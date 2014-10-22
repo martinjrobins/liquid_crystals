@@ -13,14 +13,13 @@ from png_show import png_show
 L = 50.0
 k = 3.0
 sigma_s = 0.5
-rho = 0.3
+rho = 0.5
 rot_step = 2*pi/5
-diff_step = sigma_s/0.4
+diff_step = sigma_s/1
 T = 0.0000000001
 area = (1.0/4.0)*pi*k*sigma_s**2
 N = int(rho*L**2/area)
 
-hgo_steps = 10**4
 N_b = 10**4
 tau_s = 10**(-4)
 
@@ -42,7 +41,6 @@ for i in range(N):
     eps = sigma_s
     p.position = Vect3d(uniform(eps,L-eps),uniform(eps,L-eps),0)
     p.theta = uniform(0,2*pi)
-    p.orientation = Vect3d(u)
     p.fixed = False
     particles.append(p)
     
@@ -94,7 +92,7 @@ ren.add_actor(a2)
 ren.reset_camera(L*0.1,L*0.9,L*0.1,L*0.9,-0.1,0.1)
 
 
-tau = monte_carlo_timestep(hgo_steps,particles,U_hgo,params)
+tau = monte_carlo_timestep(N_b,particles,U_hgo,params)
 v = particles.get_grid()
 glyph.modified()
 

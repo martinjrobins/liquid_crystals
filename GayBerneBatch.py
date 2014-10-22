@@ -14,20 +14,19 @@ L = 50.0
 k = 3.0
 sigma_s = 0.5
 rho = 0.3
-rot_step = 2*pi/25
-diff_step = sigma_s/10
+rot_step = 2*pi/20
+diff_step = sigma_s/0.5
 T = 3.2
 area = (1.0/4.0)*pi*k*sigma_s**2
 N = int(rho*L**2/area)
 
-hgo_steps = 10**4
 N_b = 10**4
 tau_s = 10**(-4)
 
 params = Params()
-params['Dtrans'] = diff_step*50
-params['Drot'] = rot_step*50
-params['Temp'] = T
+params['Dtrans'] = diff_step
+params['Drot'] = rot_step
+params['Temp'] = T*0.000000001
 
 params['L'] = L
 out_dir = 'out/GB'
@@ -96,7 +95,7 @@ ren.add_actor(a2)
 ren.reset_camera(L*0.1,L*0.9,L*0.1,L*0.9,-0.1,0.1)
 
 
-tau = monte_carlo_timestep(hgo_steps,particles,U_hgo,params)
+tau = monte_carlo_timestep(N_b,particles,U_hgo,params)
 v = particles.get_grid()
 glyph.modified()
 
@@ -107,6 +106,7 @@ f = open('%s/U%04d'%(out_dir,run), 'w')
 
 params['Dtrans'] = diff_step
 params['Drot'] = rot_step
+params['Temp'] = T
 
 for batch in range(200):
     tau = monte_carlo_timestep(N_b,particles,U,params)

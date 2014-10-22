@@ -36,7 +36,6 @@ for run in range(100):
         for j in range(N+1):
             p = Particle()
             p.position = Vect3d(i,j,0)
-            p.averaged_position = p.position
             p.theta = 0
             p.fixed = True
             if (i==0) or (i==N):
@@ -49,10 +48,7 @@ for run in range(100):
                 p.theta = 0
             else:
                 theta = uniform(0,2*pi)
-                u = [cos(theta),sin(theta),0]
                 p.fixed = False
-            p.orientation = Vect3d(u)
-            p.averaged_orientation = p.orientation
             particles.append(p)
      
     
