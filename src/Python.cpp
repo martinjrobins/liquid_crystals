@@ -191,6 +191,8 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,HGOPotential>);
 	def("monte_carlo_timestep",&monte_carlo_timestep<SpeciesTuple,LabwohlLasherPotential>);
 
+	def("local_averaging",&local_averaging<SpeciesTuple>);
+
 
 	/*
 	 * GayBernePotential

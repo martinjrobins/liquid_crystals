@@ -35,6 +35,7 @@ double HGOPotential::evaluate(const Vect3d& x1, const Vect3d& u1,
 	double udotu = u1.dot(u2);
 	double u1dotr = u1.dot(rhat);
 	double u2dotr = u2.dot(rhat);
+	//std::cout <<"evaluating with x1 = "<<x1<<" u1 = "<<u1<<" x2 = "<<x2<<"u2 = "<<u2<<" sigma = "<<sigma(udotu,u1dotr,u2dotr)<<" u1dotr = "<<u1dotr<<" u2dotr = "<<u2dotr<<" udotu = "<<udotu<<" sigma_s = "<<sigma_s<<std::endl;
 	if (r < sigma(udotu,u1dotr,u2dotr)) {
 		//return 0.001*std::numeric_limits<double>::max();
 		return 1.0;
@@ -52,8 +53,9 @@ HGOPotential::~HGOPotential() {
 }
 
 double HGOPotential::sigma(const double udotu, const double u1dotr, const double u2dotr) const {
-	double first = pow(u1dotr + u2dotr,2) / (1.0 + xi*udotu);
-	double second = pow(u1dotr - u2dotr,2) / (1.0 - xi*udotu);
+	const double first = pow(u1dotr + u2dotr,2) / (1.0 + xi*udotu);
+	const double second = pow(u1dotr - u2dotr,2) / (1.0 - xi*udotu);
+	//std::cout <<" first = "<<first<<" second = "<<second<<" xi = "<<xi<<std::endl;
 	//if (isnan(sigma_s*sqrt(1 - (xi/2.0) * (first + second)))) std::cout << "(xi/2.0) * (first + second) = "<<(xi/2.0) * (first + second)<<" 1+xi*udotu "<<1 + xi*udotu<< "1-xi*udotu "<<1 - xi*udotu <<std::endl;
 	return sigma_s*pow(1.0 - (xi/2.0) * (first + second),-0.5);
 }

@@ -15,15 +15,15 @@ using namespace Aboria;
 
 const double k_b = 1.3806488e-23;
 
-enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_AVERAGED_ORIENTATION,SPECIES_AVERAGED_POSITION,SPECIES_NUM_MOVES,SPECIES_FIXED,SPECIES_THETA,SPECIES_AVERAGED_THETA};
-typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,unsigned int,bool,double,double> SpeciesTuple;
+enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_AVERAGED_ORIENTATION,SPECIES_AVERAGED_POSITION,SPECIES_NUM_MOVES,SPECIES_FIXED,SPECIES_THETA,SPECIES_AVERAGED_THETA,SPECIES_Q11,SPECIES_Q12};
+typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,unsigned int,bool,double,double,double,double> SpeciesTuple;
 typedef Particles<SpeciesTuple> SpeciesType;
 namespace Aboria {
 template <>
 class DataNames<SpeciesTuple> {
 public:
 	std::string static get(unsigned int n) {
-		std::string ret[9] = {"velocity","orientation","potential","averaged_orientation","averaged_position","number_of_moves","fixed","theta","averaged_theta"};
+		std::string ret[11] = {"velocity","orientation","potential","averaged_orientation","averaged_position","number_of_moves","fixed","theta","averaged_theta","Q11","Q12"};
 		return ret[n];
 	}
 };
@@ -41,6 +41,8 @@ public:
 				GET_TUPLE(bool,fixed,SPECIES_FIXED,particle); \
 				GET_TUPLE(double,thetaa,SPECIES_AVERAGED_THETA,particle); \
 				GET_TUPLE(double,theta,SPECIES_THETA,particle); \
+				GET_TUPLE(double,Q11,SPECIES_Q11,particle); \
+				GET_TUPLE(double,Q12,SPECIES_Q12,particle); \
 				GET_TUPLE(Vect3d,v,SPECIES_VELOCITY,particle);
 #define GET_TUPLE_CONST(type,name,position,particle) const type& name = std::get<position>(particle.get_data_const())
 #define REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tuple) \
@@ -55,6 +57,8 @@ public:
 				GET_TUPLE_CONST(bool,fixedj,SPECIES_FIXED,j); \
 				GET_TUPLE_CONST(double,thetaaj,SPECIES_AVERAGED_THETA,j); \
 				GET_TUPLE_CONST(double,thetaj,SPECIES_THETA,j); \
+				GET_TUPLE_CONST(double,Q11j,SPECIES_Q11,j); \
+				GET_TUPLE_CONST(double,Q12j,SPECIES_Q12,j); \
 				GET_TUPLE_CONST(Vect3d,vj,SPECIES_VELOCITY,j);
 
 

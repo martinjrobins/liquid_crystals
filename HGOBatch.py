@@ -13,12 +13,13 @@ from png_show import png_show
 L = 50.0
 k = 3.0
 sigma_s = 0.5
-rho = 0.5
-rot_step = 2*pi/5
-diff_step = sigma_s/1
+rho = 0.3
+rot_step = 2*pi/10
+diff_step = sigma_s/5
 T = 0.0000000001
 area = (1.0/4.0)*pi*k*sigma_s**2
-N = int(rho*L**2/area)
+#N = int(rho*L**2/area)
+N = int(rho*L**2/sigma_s**2)
 
 N_b = 10**4
 tau_s = 10**(-4)
@@ -31,6 +32,7 @@ params['Temp'] = T
 params['L'] = L
 out_dir = 'out/HGO'
 
+averaging_diameter = 5.0
 
 
 # In[3]:
@@ -71,11 +73,20 @@ for i in range(n_side):
     p.theta = 0
     p.fixed = True
     particles.append(p)
+    
+lattice_particles = Particles()
+N = 50
+for i in range(N+1):
+    for j in range(N+1):
+        p = Particle()
+        p.position = Vect3d(i,j,0)
+        p.fixed = True
+        lattice_particles.append(p)
  
 U_hgo = HGOPotential(sigma_s=sigma_s,k=k)
 
 v = particles.get_grid()
-v._get_point_data().set_active_normals('averaged_orientation')
+v._get_point_data().set_active_normals('orientation')
 ellipse = tvtk.ParametricEllipsoid(x_radius=sigma_s*k/2.0,y_radius=sigma_s/2.0,z_radius=sigma_s/2.0)
 ellipse_source = tvtk.ParametricFunctionSource(parametric_function=ellipse,u_resolution=8,v_resolution=8,w_resolution=8)
 domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
@@ -112,6 +123,12 @@ for batch in range(200):
     v = particles.get_grid()
     glyph.modified()
     png_show(ren,filename='%s/batch%04d'%(out_dir,batch),width=800,height=800)
+    w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/vtkBatch%04d.vtu'%(out_dir,batch))
+    w.write()
+    
+    local_averaging(averaging_diameter,lattice_particles,particles)
+    w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/vtkAveraged%04d.vtu'%(out_dir,batch))
+    w.write()
     
 w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/final.vtu'%(out_dir))
 w.write()
