@@ -170,7 +170,7 @@ void local_averaging(const double length_scale, ptr<Particles<DATA_TYPE> > avera
 			const double r2 = dx.squaredNorm();
 			if (r2 > length_scale*length_scale) continue;
 			if (j.get_id()==i.get_id()) continue;
-			Q11 += uj[0]*uj[0] - 1.0/2.0;
+			Q11 += 2.0*uj[0]*uj[0] - 1.0;
 			Q12 += uj[0]*uj[1];
 			count++;
 		}
