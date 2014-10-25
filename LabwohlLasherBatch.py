@@ -47,7 +47,7 @@ for run in range(100):
                     continue
                 p.theta = 0
             else:
-                theta = uniform(0,2*pi)
+                p.theta = uniform(0,2*pi)
                 p.fixed = False
             particles.append(p)
      
