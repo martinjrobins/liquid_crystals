@@ -80,6 +80,26 @@ struct Vect3_to_python
 };
 
 
+double getitem_Vect3d(Vect3d& v, int index) {
+  if(index < 0 || index >=3)
+  {
+    PyErr_SetString(PyExc_IndexError, "index out of range");
+    throw boost::python::error_already_set();;
+  }
+  return v[index];
+}
+
+void setitem_Vect3d(Vect3d& v, int index, float val)
+{
+  if(index < 0 || index >=3)
+  {
+    PyErr_SetString(PyExc_IndexError, "index out of range");
+    throw boost::python::error_already_set();;
+  }
+  v[index] = val;
+}
+
+
 template<class T>
 struct vtkSmartPointer_to_python {
 	static PyObject *convert(const vtkSmartPointer<T> &p) {
@@ -116,6 +136,11 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 //		Vect3b,
 //		Vect3_to_python<bool> >();
 
+//	boost::python::class_< Vect3d  >("Vect3d")
+//	  .def("__getitem__", &getitem_Vect3d)
+//	  .def("__setitem__", &setitem_Vect3d)
+//	;
+
 	/*
 	 * map
 	 */
@@ -131,6 +156,8 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 			.def(self - self)
 			.def(self / double())
 			.def(self_ns::str(self))
+			.def("__getitem__", &getitem_Vect3d)
+			.def("__setitem__", &setitem_Vect3d)
 			;
 
 
