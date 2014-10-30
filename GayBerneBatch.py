@@ -12,17 +12,17 @@ from png_show import png_show
 
 L = 50.0
 k = 3.0
-sigma_s = 0.5
+sigma_s = 0.25
 rho = 0.3
 rot_step = 2*pi/25
-diff_step = sigma_s/10
-T = 3.0
+diff_step = sigma_s/20
+T = 3.2
 area = (1.0/4.0)*pi*k*sigma_s**2
 #N = int(rho*L**2/area)
 N = int(rho*(L**2)/(sigma_s**2))
 
 
-averaging_diameter = 5.0
+averaging_diameter = 2.5
 
 print 'adding ',N,' particles...'
 
@@ -36,7 +36,7 @@ params['Drot'] = rot_step*10
 params['Temp'] = T*0.000000001
 
 params['L'] = L
-out_dir = 'out/GB'
+out_dir = 'out/GB/sigma_0.25'
 
 
 

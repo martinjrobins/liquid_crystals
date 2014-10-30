@@ -14,12 +14,14 @@ L = 50.0
 k = 3.0
 sigma_s = 0.5
 rho = 0.3
-rot_step = 2*pi/10
-diff_step = sigma_s/5
+rot_step = 2*pi/25
+diff_step = sigma_s/10
 T = 0.0000000001
 area = (1.0/4.0)*pi*k*sigma_s**2
 #N = int(rho*L**2/area)
 N = int(rho*L**2/sigma_s**2)
+print 'adding ',N,' particles...'
+
 
 N_b = 10**4
 tau_s = 10**(-4)
@@ -32,7 +34,7 @@ params['Temp'] = T
 params['L'] = L
 out_dir = 'out/HGO'
 
-averaging_diameter = 5.0
+averaging_diameter = 10.0
 
 
 # In[3]:
