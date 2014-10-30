@@ -80,7 +80,7 @@ for i in range(n_side):
     particles.append(p)
     
 lattice_particles = Particles()
-N = 50
+N = int(L)
 for i in range(N+1):
     for j in range(N+1):
         p = Particle()
