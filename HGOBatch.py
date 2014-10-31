@@ -129,13 +129,18 @@ glyph2 = tvtk.Glyph3D(source=ellipse_source.output,input=calc4.output,scale_fact
 #glyph2.set_input_array_to_process(0,0,0,0,'s')	# scalars
 glyph2.set_input_array_to_process(1,0,0,0,'n')	# vectors
 glyph2.set_input_array_to_process(3,0,0,0,'s')	# colors
-#glyph2.update()
+glyph2.update()
 
 
 color_by = 's'
 m3 = tvtk.PolyDataMapper(input=glyph2.output)
 m3.select_color_array(color_by)
-m3.scalar_range=glyph2.get_output_data_object(0).get_point_data().get_array(color_by).get_range()
+m3.scalar_range=glyph2.get_output_data_object(0).point_data.get_array(color_by).range
+m3.set_scalar_mode_to_use_point_field_data()
+m3.color_mode_to_map_scalars = True
+m3.scalar_visibility = True
+
+
 a3 = tvtk.Actor(mapper=m3)
 ren2 = tvtk.Renderer()
 ren2.add_actor(a3)
