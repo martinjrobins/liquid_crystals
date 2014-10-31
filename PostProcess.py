@@ -59,10 +59,9 @@ for filename in batch_files:
     lut = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,1]);
     lut.build()
 
-m_vtkHSVLUT ->Build();
-    mDelaunay = tvtk.PolyDataMapper(input=delaunay.output,scalar_range=[0,1],color_mode='map_scalars')    
-    m3 = tvtk.PolyDataMapper(input=glyph2.output, scalar_range=[0,1],color_mode='map_scalars')
-    a4 = tvtk.ScalarBarActor(lookup_table=m3.lookup_table,title="s")
+    mDelaunay = tvtk.PolyDataMapper(input=delaunay.output,lookup_table=lut)    
+    m3 = tvtk.PolyDataMapper(input=glyph2.output, lookup_table=lut)
+    a4 = tvtk.ScalarBarActor(lookup_table=lut,title="s")
     
     a3 = tvtk.Actor(mapper=m3)
     ren2 = tvtk.Renderer()
