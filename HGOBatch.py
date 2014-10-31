@@ -108,7 +108,6 @@ ren.add_actor(a2)
 ren.reset_camera(L*0.1,L*0.9,L*0.1,L*0.9,-0.1,0.1)
 
 v2 = lattice_particles.get_grid()
-#v2._get_point_data().set_active_normals('orientation')
 calc1 = tvtk.ArrayCalculator(input=v2,result_array_name="s",function="mag(averaged_orientation)",replace_invalid_values=True)
 calc1.add_vector_variable('averaged_orientation','averaged_orientation')
 calc2 = tvtk.ArrayCalculator(input=calc1.output,result_array_name="n1",function="sqrt(ao_X/(2*s) + 0.5)",replace_invalid_values=True)
