@@ -13,17 +13,12 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 	std::for_each(particles->begin(),particles->end(),[](SpeciesType::Value& i) {
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
-		ra = r;
-		thetaa = theta;
-		ua = u;
+		u = Vect3d(cos(theta),sin(theta),0);
 	});
 
 	std::for_each(averaging_points->begin(),averaging_points->end(),[](SpeciesType::Value& i) {
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
-		ra = r;
-		thetaa = theta;
-		ua = u;
 	});
 
 	const double Dtrans = params["Dtrans"];
@@ -54,7 +49,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 	if (Na <= 0) Na = 1;
 	const int avstep = Nb/Na;
 	for (int j = 0; j < Nb; ++j) {
-		if (j%outstep == 0) std::cout << "." << std::flush;
+		if ((j-1)%outstep == 0) std::cout << "." << std::flush;
 		for (int ii = 0; ii < particles->size(); ++ii) {
 
 			/*
@@ -67,7 +62,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			}
 			//const int index = ii;
 			typename Particles<DATA_TYPE>::value_type& i = (*particles)[index];
-			REGISTER_SPECIES_PARTICLE(i);ua[0] = Q11;
+			REGISTER_SPECIES_PARTICLE(i);
 			//thetaa = (theta + n*thetaa)/(n+1);
 			//ua = Vect3d(cos(thetaa),sin(thetaa),0);
 			ua = (u + n*ua)/(n+1);
@@ -115,11 +110,11 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			if ((Udiff <= 0) || ((*particles)[0].rand_uniform()<acceptance_ratio)) {
 				//std::cout <<"accepted"<<std::endl;
 
-				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&candidate_pos,&candidate_theta](SpeciesType::Value& i) {
+				particles->update_positions_sequential(particles->begin()+index,particles->begin()+index+1,[&candidate_pos,&candidate_u,&candidate_theta](SpeciesType::Value& i) {
 					REGISTER_SPECIES_PARTICLE(i);
 					//std::cout <<"updating position to "<<candidate_pos<<std::endl;
 					theta = candidate_theta;
-					u = Vect3d(cos(theta),sin(theta),0);
+					u = candidate_u;
 					return candidate_pos;
 				});
 				accepts++;
@@ -136,8 +131,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			std::for_each(averaging_points->begin(),averaging_points->end(),[particles,h](SpeciesType::Value& i) {
 				REGISTER_SPECIES_PARTICLE(i);
 
-				u[0] = 0;
-				u[1] = 0;
+				u << 0,0,0;
 				int count = 0;
 				for (auto tpl: particles->get_neighbours(r)) {
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);

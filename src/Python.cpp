@@ -167,6 +167,7 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 	class_<SpeciesType,typename Aboria::ptr<SpeciesType> >("Particles")
 	        .def(boost::python::vector_indexing_suite<SpeciesType >())
 	        .def("get_grid",&SpeciesType::get_grid)
+	        .def("copy_from_vtk_grid",&SpeciesType::copy_from_vtk_grid)
 	    ;
 
 

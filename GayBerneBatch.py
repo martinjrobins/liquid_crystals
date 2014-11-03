@@ -5,15 +5,16 @@ from particleSimulation import *
 from tvtk.api import tvtk
 from random import uniform
 from math import sqrt,pi,cos,sin
-from png_show import png_show
+import os
+import sys
 
 
 # In[2]:
 
-L = 50.0
+L = 25.0
 k = 3.0
-sigma_s = 0.25
-rho = 0.3
+sigma_s = 0.5
+rho = 0.2
 rot_step = 2*pi/25
 diff_step = sigma_s/20
 T = 3.2
@@ -27,20 +28,20 @@ averaging_diameter = 2.5
 print 'adding ',N,' particles...'
 
 
-N_b = 10**4
+N_b = 10**5
 tau_s = 10**(-4)
 
 params = Params()
 params['Dtrans'] = diff_step*10
 params['Drot'] = rot_step*10
 params['Temp'] = T*0.000000001
-
+params['h'] = averaging_diameter
 params['L'] = L
-out_dir = 'out/GB/sigma_0.25'
 
-
-
-# In[3]:
+assert len(sys.argv)==2
+out_dir = sys.argv[1]
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 particles = Particles()
 for i in range(N):
@@ -91,31 +92,9 @@ for i in range(N+1):
 U_hgo = HGOPotential(sigma_s=sigma_s,k=k)
 U = GayBernePotential(sigma_s=sigma_s,k=k,kdash=1.0/5.0,mu=1,nu=3,epsilon_0=1)
 
-
-v = particles.get_grid()
-v._get_point_data().set_active_normals('orientation')
-ellipse = tvtk.ParametricEllipsoid(x_radius=sigma_s*k/2.0,y_radius=sigma_s/2.0,z_radius=sigma_s/2.0)
-ellipse_source = tvtk.ParametricFunctionSource(parametric_function=ellipse,u_resolution=8,v_resolution=8,w_resolution=8)
-domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
-glyph = tvtk.Glyph3D(source=ellipse_source.output,input=v,scale_factor=1,vector_mode=True,orient=True)
-
-m = tvtk.PolyDataMapper(input=glyph.output)
-m2 = tvtk.PolyDataMapper(input=domain_source.output)
-p = tvtk.Property(representation='w')
-a2 = tvtk.Actor(mapper=m2,property=p)
-a = tvtk.Actor(mapper=m)
-ren = tvtk.Renderer()
-ren.add_actor(a)
-ren.add_actor(a2)
-ren.reset_camera(L*0.1,L*0.9,L*0.1,L*0.9,-0.1,0.1)
-
-
-tau = monte_carlo_timestep(N_b,particles,U_hgo,params)
-v = particles.get_grid()
-glyph.modified()
+tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U_hgo,params)
 
 run = 0
-png_show(ren,filename='%s/init%04d'%(out_dir,run),width=800,height=800)	
 f = open('%s/U%04d'%(out_dir,run), 'w')
 
 
@@ -124,21 +103,17 @@ params['Drot'] = rot_step
 params['Temp'] = T
 
 for batch in range(200):
-    tau = monte_carlo_timestep(N_b,particles,U,params)
+    tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
     f.flush()
-    v = particles.get_grid()
-    glyph.modified()
-    png_show(ren,filename='%s/batch%04d'%(out_dir,batch),width=800,height=800)
-    w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/vtkBatch%04d.vtu'%(out_dir,batch))
+
+    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/vtkBatch%04d.vtu'%(out_dir,batch))
     w.write()
     
-    local_averaging(averaging_diameter,lattice_particles,particles)
     w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/vtkAveraged%04d.vtu'%(out_dir,batch))
     w.write()
     
 f.close()
-w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/final.vtu'%(out_dir))
-w.write()
+
   
