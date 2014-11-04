@@ -31,7 +31,7 @@ struct Vect3_from_python_list
 		boost::python::converter::registry::push_back(
 				&convertible,
 				&construct,
-				boost::python::type_id<Eigen::Matrix<T,3,1> >());
+				boost::python::type_id<Vector<T,3> >());
 	}
 
 	static void* convertible(PyObject* obj_ptr) {
@@ -53,12 +53,12 @@ struct Vect3_from_python_list
 
 		// Grab pointer to memory into which to construct the new QString
 		void* storage = (
-				(boost::python::converter::rvalue_from_python_storage<Eigen::Matrix<T,3,1> >*)
+				(boost::python::converter::rvalue_from_python_storage<Vector<T,3> >*)
 				data)->storage.bytes;
 
 		// in-place construct the new QString using the character data
 		// extraced from the python object
-		new (storage) Eigen::Matrix<T,3,1>(x,y,z);
+		new (storage) Vector<T,3>(x,y,z);
 
 		// Stash the memory chunk pointer for later use by boost.python
 		data->convertible = storage;
@@ -69,7 +69,7 @@ struct Vect3_from_python_list
 template<typename T>
 struct Vect3_to_python
 {
-    static PyObject* convert(Eigen::Matrix<T,3,1> const& s)
+    static PyObject* convert(Vector<T,3> const& s)
       {
     	boost::python::list ret;
     	ret.append(s[0]);
@@ -114,9 +114,52 @@ struct vtkSmartPointer_to_python {
 	}
 };
 
+//
+// This python to C++ converter uses the fact that VTK Python objects have an
+// attribute called __this__, which is a string containing the memory address
+// of the VTK C++ object and its class name.
+// E.g. for a vtkPoints object __this__ might be "_0000000105a64420_p_vtkPoints"
+//
+void* extract_vtk_wrapped_pointer(PyObject* obj)
+{
+    char thisStr[] = "__this__";
+    //first we need to get the __this__ attribute from the Python Object
+    if (!PyObject_HasAttrString(obj, thisStr))
+        return NULL;
+
+    PyObject* thisAttr = PyObject_GetAttrString(obj, thisStr);
+    if (thisAttr == NULL)
+        return NULL;
+
+    char* str = PyString_AsString(thisAttr);
+    if(str == 0 || strlen(str) < 1)
+        return NULL;
+
+    char hex_address[32], *pEnd;
+    char *_p_ = strstr(str, "_p_vtk");
+    if(_p_ == NULL) return NULL;
+    char *class_name = strstr(_p_, "vtk");
+    if(class_name == NULL) return NULL;
+    strcpy(hex_address, str+1);
+    hex_address[_p_-str-1] = '\0';
+
+    long address = strtol(hex_address, &pEnd, 16);
+
+    vtkObjectBase* vtk_object = (vtkObjectBase*)((void*)address);
+    if(vtk_object->IsA(class_name))
+    {
+        return vtk_object;
+    }
+
+    return NULL;
+}
+
+
 #define VTK_PYTHON_CONVERSION(type) \
     /* register the to-python converter */ \
     to_python_converter<vtkSmartPointer<type>,vtkSmartPointer_to_python<type> >(); \
+    /* register the from-python converter */ \
+    converter::registry::insert(&extract_vtk_wrapped_pointer, type_id<type>());
 
 
 BOOST_PYTHON_MODULE(particleSimulation) {

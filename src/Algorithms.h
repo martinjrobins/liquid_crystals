@@ -131,7 +131,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			std::for_each(averaging_points->begin(),averaging_points->end(),[particles,h](SpeciesType::Value& i) {
 				REGISTER_SPECIES_PARTICLE(i);
 
-				u << 0,0,0;
+				u = Vect3d(0,0,0);
 				int count = 0;
 				for (auto tpl: particles->get_neighbours(r)) {
 					REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
