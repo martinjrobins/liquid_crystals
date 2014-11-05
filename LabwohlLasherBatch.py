@@ -5,6 +5,7 @@
 
 from particleSimulation import *
 from random import uniform
+from tvtk.api import tvtk
 from math import sqrt,pi,cos,sin
 import os
 import sys
