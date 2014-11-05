@@ -189,11 +189,19 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 //		return original_pos;
 //	});
 
-	return std::accumulate(particles->begin(), particles->end(), 0.0, [](double U, SpeciesType::Value& i){
-		GET_TUPLE(double,Ui,SPECIES_POTENTIAL,i);
-		return U+Ui;
-	});
+//	return std::accumulate(particles->begin(), particles->end(), 0.0, [](double U, SpeciesType::Value& i){
+//		GET_TUPLE(double,Ui,SPECIES_POTENTIAL,i);
+//		return U+Ui;
+//	});
 
+
+	Vect3d Q = std::accumulate(particles->begin(), particles->end(), Vect3d(0,0,0), [](Vect3d Q, SpeciesType::Value& i){
+		REGISTER_SPECIES_PARTICLE(i);
+		Q[0] += 2.0*ua[0]*ua[0] - 1.0;
+		Q[1] += ua[0]*ua[1];
+		return Q;
+	});
+	return (Q/particles->size()).norm();
 }
 
 template<typename DATA_TYPE>

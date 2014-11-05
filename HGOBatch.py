@@ -10,7 +10,7 @@ import sys
 L = 25.0
 k = 3.0
 sigma_s = 0.5
-rho = 0.2
+rho = 0.3
 rot_step = 2*pi/25
 diff_step = sigma_s/10
 T = 0.0000000001
