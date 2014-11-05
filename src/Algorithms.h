@@ -138,7 +138,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 					const double r2 = dx.squaredNorm();
 					if (r2 > h*h) continue;
 					u[0] += 2.0*uj[0]*uj[0] - 1.0;
-					u[1] += uj[0]*std::abs(uj[1]);
+					u[1] += uj[0]*uj[1];
 					count++;
 				}
 				u[0] /= count;
