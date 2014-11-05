@@ -8,7 +8,7 @@ import sys
 
 
 L = 25.0
-k = 3.0
+k = 2.0
 sigma_s = 0.5
 rho = 0.3
 rot_step = 2*pi/25

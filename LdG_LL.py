@@ -18,11 +18,11 @@ rot_step = 2*pi/20
 T = 0.05
 N = 100
 N_LdG = 50
-N_b = 10**4
+N_b = 10**3
 out_dir = 'out/LdG_LL'
 eps = 0.02
 
-mesh = UnitSquare(N_LdG,N_LdG)
+mesh = UnitSquareMesh(N_LdG,N_LdG)
 (F,bc,Q) = setupLdG(mesh,pi/2,pi/2,0,0,eps)
 
 file = File("%s/LdG_init.pvd"%out_dir)
@@ -107,6 +107,8 @@ for i in range(N+1):
         particles.append(p)
         count = count + 1
         
+print 'added ',count,' particles...'
+        
 lattice_particles = Particles()
 output_particles = Particles()
 count = 0
@@ -120,7 +122,14 @@ for i in range(N_LdG+1):
             lattice_particles.append(p)
             count = count + 1
         else:
-            (Q11,Q12) = Q(x)
+            if (i==0) or (i==N_LdG):
+                Q11 = cos(pi-0.0001)
+                Q12 = sin(pi-0.0001)
+            elif (j==0) or (j==N_LdG):
+                Q11 = cos(0)
+                Q12 = sin(0)
+            else:
+                (Q11,Q12) = Q(x)                
             s = sqrt(Q11**2+Q12**2)
             theta = acos(Q11/s)/2.0
             p.theta = theta
@@ -154,7 +163,7 @@ w.write()
             
 #run lattice monte carlo
 f = open('%s/U.dat'%(out_dir), 'w')
-for batch in range(5):
+for batch in range(10):
     tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
@@ -168,13 +177,16 @@ for p in lattice_particles:
     x = [p.position[0],p.position[1]]
     i = int(p.position[0]/psep_LdG+0.5)
     j = int(p.position[1]/psep_LdG+0.5)
-    index = i*(N+1)+j
+    index = i*(N_LdG+1)+j
     output_particles[index].orientation = p.orientation
     output_particles[index].averaged_orientation = p.averaged_orientation
     output_particles[index].theta = p.theta
     
 
 w = tvtk.XMLUnstructuredGridWriter(input=output_particles.get_grid(), file_name='%s/finalAveraged%04d.vtu'%(out_dir,batch))    
+w.write()
+
+w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch%04d.vtu'%(out_dir,batch))    
 w.write()
     
     

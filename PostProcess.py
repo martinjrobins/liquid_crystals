@@ -29,8 +29,12 @@ averaged_files = glob.glob('%s/vtkAveraged*.vtu'%out_dir)
 averaged_files.sort()
 
 if len(averaged_files)==0:
-    averaged_files = glob.glob('%s/final*.vtu'%out_dir)
+    averaged_files = glob.glob('%s/finalAveraged*.vtu'%out_dir)
     averaged_files.sort()
+    L = 1.0
+    sigma_s = L/200.0
+    k = 3
+    
 else:
     U_data = import_columns('%s/U0000'%out_dir)
     plt.figure(figsize=(6,4.5))
@@ -44,6 +48,9 @@ assert len(averaged_files)>0
 
 batch_files = glob.glob('%s/vtkBatch*.vtu'%out_dir)
 batch_files.sort()
+if len(batch_files)==0:
+    batch_files = glob.glob('%s/finalBatch*.vtu'%out_dir)
+    batch_files.sort()
 
 
 #
@@ -74,7 +81,7 @@ calc4.output.point_data.set_active_vectors('n')
 
 transform = tvtk.Transform()
 tvtk.to_vtk(transform).RotateZ(90)
-cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=1,radius=0.1).output,transform=transform)
+cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=sigma_s*2,radius=sigma_s/5).output,transform=transform)
 glyph = tvtk.Glyph3D(source=cylinder_source.output,input=calc4.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
  
 calc1.update()

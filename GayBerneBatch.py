@@ -11,7 +11,7 @@ import sys
 
 # In[2]:
 
-L = 25.0
+L = 50.0
 k = 3.0
 sigma_s = 0.5
 rho = 0.3
@@ -23,7 +23,7 @@ area = (1.0/4.0)*pi*k*sigma_s**2
 N = int(rho*(L**2)/(sigma_s**2))
 
 
-averaging_diameter = 2.5
+averaging_diameter = 5.0
 
 print 'adding ',N,' particles...'
 
