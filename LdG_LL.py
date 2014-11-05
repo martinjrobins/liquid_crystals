@@ -8,6 +8,8 @@ Created on Wed Oct 15 14:17:38 2014
 import numpy as np
 from setupLdG import setupLdG
 from dolfin import *
+import os
+import sys
 
 
 # Create mesh
@@ -36,7 +38,10 @@ file << Q
 
 c = 4*eps
 psep = 1.0/N
+psep_LdG = 1.0/N_LdG
 overlap = 1.0*psep
+averaging_diameter = psep_LdG*1.01
+
 
 def in_corners(x):
     return True if x[0]**2 + x[1]**2 <= c**2 or \
@@ -69,6 +74,7 @@ params = Params()
 params['Dtrans'] = 0
 params['Drot'] = rot_step
 params['Temp'] = T
+params['h'] = averaging_diameter
 params['L'] = 1.0
 
 list_of_overlap_particles = []
@@ -100,6 +106,28 @@ for i in range(N+1):
         p.orientation = Vect3d(cos(p.theta),sin(p.theta),0)
         particles.append(p)
         count = count + 1
+        
+lattice_particles = Particles()
+output_particles = Particles()
+count = 0
+for i in range(N_LdG+1):
+    for j in range(N_LdG+1):
+        p = Particle()
+        x = [i*psep_LdG,j*psep_LdG]
+        p.position = Vect3d(x[0],x[1],0)        
+        p.fixed = True
+        if in_corners(x):
+            lattice_particles.append(p)
+            count = count + 1
+        else:
+            (Q11,Q12) = Q(x)
+            s = sqrt(Q11**2+Q12**2)
+            theta = acos(Q11/s)/2.0
+            p.theta = theta
+            p.orientation = Vect3d(Q11,Q12,0)
+            p.averaged_orientation = Vect3d(Q11,Q12,0)
+        output_particles.append(p)
+            
      
     
 U = LabwohlLasherPotential(epsilon=1,lattice_spacing=psep)
@@ -119,7 +147,6 @@ for i in list_of_overlap_particles:
     theta = acos(Q11/s)/2.0
     particles[i].theta = theta
     particles[i].orientation = Vect3d(cos(theta),sin(theta),0)
-
     
 v = particles.get_grid()
 w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/LL_init.vtu'%(out_dir))
@@ -128,13 +155,27 @@ w.write()
 #run lattice monte carlo
 f = open('%s/U.dat'%(out_dir), 'w')
 for batch in range(5):
-    tau = monte_carlo_timestep(N_b,particles,U,params)
+    tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
     f.flush()
-    v = particles.get_grid()
-    w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/LL_batch%04d.vtu'%(out_dir,batch))    
+    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/LL_batch%04d.vtu'%(out_dir,batch))    
     w.write()
+    w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/LL_averaged%04d.vtu'%(out_dir,batch))    
+    w.write()
+    
+for p in lattice_particles:
+    x = [p.position[0],p.position[1]]
+    i = int(p.position[0]/psep_LdG+0.5)
+    j = int(p.position[1]/psep_LdG+0.5)
+    index = i*(N+1)+j
+    output_particles[index].orientation = p.orientation
+    output_particles[index].averaged_orientation = p.averaged_orientation
+    output_particles[index].theta = p.theta
+    
+
+w = tvtk.XMLUnstructuredGridWriter(input=output_particles.get_grid(), file_name='%s/finalAveraged%04d.vtu'%(out_dir,batch))    
+w.write()
     
     
 

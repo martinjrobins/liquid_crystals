@@ -83,8 +83,12 @@ for run in range(100):
         tau = tau_new
         tau_new = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
 
-    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/final%04d.vtu'%(out_dir,run))
+    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch%04d.vtu'%(out_dir,run))
     w.write()
+    
+    w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/finalAveraged%04d.vtu'%(out_dir,run))
+    w.write()    
+    
     f.close()
     
     
