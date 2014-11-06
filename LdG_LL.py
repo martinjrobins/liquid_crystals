@@ -10,6 +10,7 @@ from setupLdG import setupLdG
 from dolfin import *
 import os
 import sys
+from math import atan2
 
 
 # Create mesh
@@ -23,7 +24,7 @@ out_dir = 'out/LdG_LL'
 eps = 0.02
 
 mesh = UnitSquareMesh(N_LdG,N_LdG)
-(F,bc,Q) = setupLdG(mesh,pi/2,pi/2,0,0,eps)
+(F,bc,Q) = setupLdG(mesh,pi/2,pi/2,pi,0,eps)
 
 file = File("%s/LdG_init.pvd"%out_dir)
 file << Q
@@ -40,7 +41,7 @@ c = 4*eps
 psep = 1.0/N
 psep_LdG = 1.0/N_LdG
 overlap = 1.0*psep
-averaging_diameter = psep_LdG*1.01
+averaging_diameter = psep_LdG
 
 
 def in_corners(x):
@@ -132,8 +133,12 @@ for i in range(N_LdG+1):
             else:
                 (Q11,Q12) = Q(x)                
             s = sqrt(Q11**2+Q12**2)
-            theta = acos(Q11/s)/2.0
-            p.theta = theta
+            n1 = sqrt(Q11/(2*s)+0.5)
+            if n1==0:
+                n2 = 1.0
+            else:
+                n2 = Q12/(2*s*n1)
+            p.theta = atan2(n2,n1)
             p.orientation = Vect3d(Q11,Q12,0)
             p.averaged_orientation = Vect3d(Q11,Q12,0)
         output_particles.append(p)
@@ -154,9 +159,14 @@ for i in list_of_overlap_particles:
     x = [particles[i].position[0],particles[i].position[1]]
     (Q11,Q12) = Q(x)
     s = sqrt(Q11**2+Q12**2)
-    theta = acos(Q11/s)/2.0
+    n1 = sqrt(Q11/(2*s)+0.5)
+    if n1==0:
+        n2 = 1.0
+    else:
+        n2 = Q12/(2*s*n1)
+    theta = atan2(n2,n1)
     particles[i].theta = theta
-    particles[i].orientation = Vect3d(cos(theta),sin(theta),0)
+    particles[i].orientation = Vect3d(n1,n2,0)
     
 v = particles.get_grid()
 w = tvtk.XMLUnstructuredGridWriter(input=v, file_name='%s/LL_init.vtu'%(out_dir))
@@ -164,8 +174,8 @@ w.write()
             
 #run lattice monte carlo
 f = open('%s/U.dat'%(out_dir), 'w')
-for batch in range(10):
-    tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
+for batch in range(5):
+    tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U,params)[2]
     print tau
     f.write('%d %f\n'%(batch,tau))
     f.flush()
