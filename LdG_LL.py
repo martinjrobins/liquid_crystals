@@ -174,11 +174,18 @@ w.write()
             
 #run lattice monte carlo
 f = open('%s/U.dat'%(out_dir), 'w')
-for batch in range(5):
-    tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U,params)[2]
-    print tau
-    f.write('%d %f\n'%(batch,tau))
+N = 5
+for batch in range(N):
+    if (batch==N-1):
+        tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
+    else:
+        tau = monte_carlo_timestep(N_b,0,particles,lattice_particles,U,params)
+
+    s = sqrt(tau[0]**2+tau[1]**2)
+    print 's = ',s,' U = ',tau[2]
+    f.write('%d %f\n'%(s,tau[2]))
     f.flush()
+    
     w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/LL_batch%04d.vtu'%(out_dir,batch))    
     w.write()
     w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/LL_averaged%04d.vtu'%(out_dir,batch))    
