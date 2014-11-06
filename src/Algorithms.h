@@ -143,7 +143,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 					const double r2 = dx.squaredNorm();
 					if (r2 > h*h) continue;
 					u[0] += 2.0*uj[0]*uj[0] - 1.0;
-					u[1] += uj[0]*uj[1];
+					u[1] += 2.0*uj[0]*uj[1];
 					count++;
 				}
 				u[0] /= count;
@@ -204,7 +204,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 		REGISTER_SPECIES_PARTICLE(i);
 		ua.normalize();
 		Q[0] += 2.0*ua[0]*ua[0] - 1.0;
-		Q[1] += ua[0]*ua[1];
+		Q[1] += 2.0*ua[0]*ua[1];
 		return Q;
 	});
 	return (Q/particles->size()).norm();
@@ -224,7 +224,7 @@ void local_averaging(const double length_scale, ptr<Particles<DATA_TYPE> > avera
 			if (r2 > length_scale*length_scale) continue;
 			if (j.get_id()==i.get_id()) continue;
 			Q11 += 2.0*uj[0]*uj[0] - 1.0;
-			Q12 += uj[0]*uj[1];
+			Q12 += 2.0*uj[0]*uj[1];
 			count++;
 		}
 		Q11 /= count;
