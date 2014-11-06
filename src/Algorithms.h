@@ -5,7 +5,7 @@
 #include "Aboria.h"
 
 template<typename DATA_TYPE, typename POTENTIAL>
-double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particles<DATA_TYPE> > particles, ptr<Particles<DATA_TYPE> > averaging_points, POTENTIAL& potential, std::map<std::string,double> &params) {
+Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particles<DATA_TYPE> > particles, ptr<Particles<DATA_TYPE> > averaging_points, POTENTIAL& potential, std::map<std::string,double> &params) {
 	std::cout << "starting monte_carlo_timestep"<<std::endl;
 
 	//Particles<DATA_TYPE> start_copy(*particles);
@@ -72,7 +72,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			//thetaa = (theta + n*thetaa)/(n+1);
 			//ua = Vect3d(cos(thetaa),sin(thetaa),0);
 			ua = (u + n*ua)/(n+1);
-			thetaa = acos(ua[0]);
+			thetaa = atan2(ua[1],ua[0]);
 			ra = (r + n*ra)/(n+1);
 			n++;
 			if (fixed) continue;
@@ -151,12 +151,12 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 				U = u.norm();
 				const double m1 = sqrt(u[0]/(2*U)+0.5);
 				const double m2 = u[1]/(2*U*m1);
-				theta = acos(m1);
+				theta = atan2(m2,m1);
 				ua = (u + n*ua)/(n+1);
 				const double Ua = ua.norm();
 				const double n1 = sqrt(ua[0]/(2*Ua)+0.5);
-				const double n2 = ua[1]/(2*U*n1);
-				thetaa = acos(n1);
+				const double n2 = ua[1]/(2*Ua*n1);
+				thetaa = atan2(n2,n1);
 				n++;
 			});
 			particles->reset_neighbour_search(diameter);
@@ -180,7 +180,6 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			const double r2 = dx.squaredNorm();
 			if (r2 > diameter*diameter) continue;
 			if (j.get_id()==i.get_id()) continue;
-			if (fixed && fixedj) continue;
 			U += 0.5*potential(r,u,rj,uj);
 		}
 
@@ -200,14 +199,22 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 //	});
 
 
-	Vect3d Q = std::accumulate(particles->begin(), particles->end(), Vect3d(0,0,0), [](Vect3d Q, SpeciesType::Value& i){
+	Vect3d Q = std::accumulate(particles->begin(), particles->end(), Vect3d(0,0,0), [particles,&potential,diameter,L](Vect3d Q, SpeciesType::Value& i){
 		REGISTER_SPECIES_PARTICLE(i);
 		ua.normalize();
 		Q[0] += 2.0*ua[0]*ua[0] - 1.0;
 		Q[1] += 2.0*ua[0]*ua[1];
+		Q[2] = 0;
+		for (auto tpl: particles->get_neighbours(r)) {
+			REGISTER_NEIGHBOUR_SPECIES_PARTICLE(tpl);
+			const double r2 = dx.squaredNorm();
+			if (r2 > diameter*diameter) continue;
+			if (j.get_id()==i.get_id()) continue;
+			Q[2] += 0.5*potential(r,ua,rj,uaj);
+		}
 		return Q;
 	});
-	return (Q/particles->size()).norm();
+	return Q;
 }
 
 template<typename DATA_TYPE>

@@ -164,7 +164,7 @@ w.write()
             
 #run lattice monte carlo
 f = open('%s/U.dat'%(out_dir), 'w')
-for batch in range(10):
+for batch in range(5):
     tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
     print tau
     f.write('%d %f\n'%(batch,tau))
