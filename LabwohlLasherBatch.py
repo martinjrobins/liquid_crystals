@@ -74,20 +74,13 @@ def run_simulation(run):
      
     
     U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
-    
-    
-    tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)[2]
 
-    f = open('%s/U%04d'%(out_dir,run), 'w')
-    print tau
-    f.write('%f\n'%tau)
-    tau_new = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)[2]
-    while abs(tau_new-tau)/tau_new > tau_s:
-        print tau_new
-        f.write('%f\n'%tau_new)
+    f = open('%s/U%04d'%(out_dir,run), 'w')    
+    for batch in range(15):
+        tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)[2]
+        print tau
+        f.write('%f\n'%tau)
         f.flush()
-        tau = tau_new
-        tau_new = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)[2]
 
     w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch%04d.vtu'%(out_dir,run))
     w.write()
