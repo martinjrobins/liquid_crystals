@@ -92,7 +92,7 @@ for i in range(N+1):
 U_hgo = HGOPotential(sigma_s=sigma_s,k=k)
 U = GayBernePotential(sigma_s=sigma_s,k=k,kdash=1.0/5.0,mu=1,nu=3,epsilon_0=1)
 
-tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U_hgo,params)
+tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U_hgo,params)[2]
 
 run = 0
 f = open('%s/U%04d'%(out_dir,run), 'w')
@@ -103,7 +103,7 @@ params['Drot'] = rot_step
 params['Temp'] = T
 
 for batch in range(200):
-    tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U,params)
+    tau = monte_carlo_timestep(N_b,N_b/10,particles,lattice_particles,U,params)[2]
     print tau
     f.write('%d %f\n'%(batch,tau))
     f.flush()
