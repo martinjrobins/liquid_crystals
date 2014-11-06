@@ -14,11 +14,17 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
 		u = Vect3d(cos(theta),sin(theta),0);
+		ua = u;
+		thetaa = theta;
+		ra = r;
 	});
 
 	std::for_each(averaging_points->begin(),averaging_points->end(),[](SpeciesType::Value& i) {
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
+		ua = u;
+		thetaa = theta;
+		ra = r;
 	});
 
 	const double Dtrans = params["Dtrans"];
@@ -66,7 +72,6 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			//thetaa = (theta + n*thetaa)/(n+1);
 			//ua = Vect3d(cos(thetaa),sin(thetaa),0);
 			ua = (u + n*ua)/(n+1);
-			ua.normalize();
 			thetaa = acos(ua[0]);
 			ra = (r + n*ra)/(n+1);
 			n++;
@@ -197,6 +202,7 @@ double monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 
 	Vect3d Q = std::accumulate(particles->begin(), particles->end(), Vect3d(0,0,0), [](Vect3d Q, SpeciesType::Value& i){
 		REGISTER_SPECIES_PARTICLE(i);
+		ua.normalize();
 		Q[0] += 2.0*ua[0]*ua[0] - 1.0;
 		Q[1] += ua[0]*ua[1];
 		return Q;
