@@ -9,6 +9,8 @@ from tvtk.api import tvtk
 from math import sqrt,pi,cos,sin
 import os
 import sys
+from multiprocessing import Pool
+
 
 # <codecell>
 
@@ -36,7 +38,7 @@ out_dir = sys.argv[1]
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 
-for run in range(100):
+def run_simulation(run):
     print 'doing run %d...'%run
     
     # <codecell>
@@ -92,5 +94,8 @@ for run in range(100):
     
     f.close()
     
-    
+pool = Pool(processes=8)              # start 4 worker processes
+pool.map(run_simulation, range(100))
+
+
     

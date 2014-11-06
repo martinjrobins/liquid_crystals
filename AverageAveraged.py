@@ -26,7 +26,8 @@ for i in range(fromi,toi):
 
     r = tvtk.XMLUnstructuredGridReader(file_name=filename)
     r.update()
-    particles.copy_from_vtk_grid(tvtk.to_vtk(r.output))
+    grid = tvtk.to_vtk(r.output)
+    particles.copy_from_vtk_grid(grid)
     
     if i == fromi:
         particles_sum.copy_from_vtk_grid(tvtk.to_vtk(r.output))

@@ -19,7 +19,7 @@ out_dir = sys.argv[1]
 
 sigma_s = 0.5
 k = 3
-L = 25
+L = 50
 
 
 

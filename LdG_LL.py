@@ -121,6 +121,7 @@ for i in range(N_LdG+1):
         if in_corners(x):
             lattice_particles.append(p)
             count = count + 1
+            p.fixed = False
         else:
             if (i==0) or (i==N_LdG):
                 Q11 = cos(pi-0.0001)
