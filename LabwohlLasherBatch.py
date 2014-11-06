@@ -77,9 +77,10 @@ def run_simulation(run):
 
     f = open('%s/U%04d'%(out_dir,run), 'w')    
     for batch in range(15):
-        tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)[2]
-        print tau
-        f.write('%f\n'%tau)
+        tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
+        s = sqrt(tau[0]**2+tau[1]**2)
+        print 's = ',s,' U = ',tau[2]
+        f.write('%f %f\n'%(s,tau[2])
         f.flush()
 
     w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch%04d.vtu'%(out_dir,run))
