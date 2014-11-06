@@ -214,6 +214,8 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 		}
 		return Q;
 	});
+	Q[0] /= particles->size();
+	Q[1] /= particles->size();
 	return Q;
 }
 
