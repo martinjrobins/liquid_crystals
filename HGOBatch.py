@@ -4,6 +4,7 @@ from random import uniform
 from math import sqrt,pi,cos,sin
 import os
 import sys
+from multiprocessing import Pool
 
 
 
@@ -20,7 +21,7 @@ N = int(rho*L**2/sigma_s**2)
 print 'adding ',N,' particles...'
 
 
-N_b = 10**1
+N_b = 10**5
 tau_s = 10**(-4)
 
 averaging_diameter = 2.5
@@ -79,9 +80,9 @@ def run_simulation(run):
         particles.append(p)
         
     lattice_particles = Particles()
-    N = int(L)
-    for i in range(N+1):N_b/10
-        for j in range(N+1):
+    Nl = int(L)
+    for i in range(Nl+1):
+        for j in range(Nl+1):
             p = Particle()
             p.position = Vect3d(i,j,0)
             p.fixed = True
@@ -111,5 +112,5 @@ def run_simulation(run):
     w.write()
         
     
-pool = Pool(processes=2)
+pool = Pool(processes=6)
 pool.map(run_simulation, range(100))  

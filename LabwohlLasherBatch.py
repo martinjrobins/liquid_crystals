@@ -76,7 +76,7 @@ def run_simulation(run):
     U = LabwohlLasherPotential(epsilon=1,lattice_spacing=1)
 
     f = open('%s/U%04d'%(out_dir,run), 'w')    
-    for batch in range(15):
+    for batch in range(10):
         tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
         s = sqrt(tau[0]**2+tau[1]**2)
         print 's = ',s,' U = ',tau[2]
