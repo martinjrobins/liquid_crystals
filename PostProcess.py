@@ -17,13 +17,14 @@ from utilities import import_columns
 assert len(sys.argv)==2
 out_dir = sys.argv[1]
 
-sigma_s = 0.5
+L = 1
+sigma_s = 0.5/40
 k = 3
-L = 50
 
 
 
 
+LdG_solutions = glob.glob('%s/LdG_solution_*.vtu'%out_dir)
 
 averaged_files = glob.glob('%s/vtkAveraged*.vtu'%out_dir)
 averaged_files.sort()
@@ -31,9 +32,9 @@ averaged_files.sort()
 if len(averaged_files)==0:
     averaged_files = glob.glob('%s/finalAveraged*.vtu'%out_dir)
     averaged_files.sort()
-    L = 1.0
-    sigma_s = L/200.0
-    k = 3
+    #L = 1.0
+    #sigma_s = L/200.0
+    #k = 3
     
 else:
     U_data = import_columns('%s/U0000'%out_dir)
@@ -42,9 +43,7 @@ else:
     plt.xlabel("$N \times 10^5$")
     plt.ylabel("$U$")
     plt.savefig('%s/U_plot.pdf'%out_dir)
-    
-assert len(averaged_files)>0
-    
+        
 
 batch_files = glob.glob('%s/vtkBatch*.vtu'%out_dir)
 batch_files.sort()
@@ -54,62 +53,68 @@ if len(batch_files)==0:
 
 
 #
-# Averaged Visualisation
+# Common
 #
-
-r = tvtk.XMLUnstructuredGridReader(file_name=averaged_files[0])
-calc1 = tvtk.ArrayCalculator(input=r.output,result_array_name="s",function="mag(averaged_orientation)",replace_invalid_values=True)
-calc1.add_vector_variable('averaged_orientation','averaged_orientation')
-calc2 = tvtk.ArrayCalculator(input=calc1.output,result_array_name="n1",function="sqrt(ao_X/(2*s) + 0.5)",replace_invalid_values=True)
-calc2.add_scalar_variable('ao_X','averaged_orientation',0)
-calc2.add_scalar_variable('s','s')
-calc3 = tvtk.ArrayCalculator(input=calc2.output,result_array_name="n2",function="ao_Y/(2*s*n1)",replace_invalid_values=True)
-calc3.add_scalar_variable('ao_Y','averaged_orientation',1)
-calc3.add_scalar_variable('s','s')
-calc3.add_scalar_variable('n1','n1')
-calc4 = tvtk.ArrayCalculator(input=calc3.output,result_array_name="n",function="n1*iHat + n2*jHat",replace_invalid_values=True)
-calc4.add_scalar_variable('n1','n1')
-calc4.add_scalar_variable('n2','n2')
-   
-
-#ellipse = tvtk.ParametricEllipsoid(x_radius=sigma_s*k/2.0,y_radius=sigma_s/2.0,z_radius=sigma_s/2.0)
-#ellipse_source = tvtk.ParametricFunctionSource(parametric_function=ellipse,u_resolution=8,v_resolution=8,w_resolution=8)
-domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
-
-calc4.update()
-calc4.output.point_data.set_active_vectors('n')
-
-transform = tvtk.Transform()
-tvtk.to_vtk(transform).RotateZ(90)
-cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=sigma_s*2,radius=sigma_s/5).output,transform=transform)
-glyph = tvtk.Glyph3D(source=cylinder_source.output,input=calc4.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
- 
-calc1.update()
-calc1.output.point_data.set_active_scalars('s')
-delaunay = tvtk.Delaunay2D(input=calc1.output)
 
 lut = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,1]);
 lut.build()
 
-aDelaunay = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=delaunay.output,lookup_table=lut))
-aScalarBar = tvtk.ScalarBarActor(lookup_table=lut,title="s",position=[0.87,0.1],label_format='%-#2.1g',maximum_width_in_pixels=100)
-aGlyph = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=glyph.output, lookup_table=lut, scalar_visibility=False),property=tvtk.Property(color=(0.5,0.5,0.5)))
+domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
 aDomainSource = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=domain_source.output),property=tvtk.Property(representation='w'))
+aScalarBar = tvtk.ScalarBarActor(lookup_table=lut,title="s",position=[0.87,0.1],label_format='%-#2.1g',maximum_width_in_pixels=100)
 
-ren = tvtk.Renderer()
-ren.add_actor(aDelaunay)
-ren.add_actor(aScalarBar)
-ren.add_actor(aGlyph)
-#ren.add_actor(aDomainSource)
 
-ren.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
+transform = tvtk.Transform()
+tvtk.to_vtk(transform).RotateZ(90)
+cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=sigma_s*2,radius=sigma_s/5).output,transform=transform)
 
-renderWindow = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
-renderWindow.add_renderer(ren)
-renderWindow.render()
- 
-windowToImageFilter = tvtk.WindowToImageFilter(input=renderWindow)
-windowToImageFilter.update()
+
+
+#
+# Averaged Visualisation
+#
+if len(averaged_files)>0:
+    r = tvtk.XMLUnstructuredGridReader(file_name=averaged_files[0])
+    calc1 = tvtk.ArrayCalculator(input=r.output,result_array_name="s",function="mag(averaged_orientation)",replacement_value=0, replace_invalid_values=True)
+    calc1.add_vector_variable('averaged_orientation','averaged_orientation')
+    calc2 = tvtk.ArrayCalculator(input=calc1.output,result_array_name="n1",function="sqrt(ao_X/(2*s) + 0.5)",replacement_value=0,replace_invalid_values=True)
+    calc2.add_scalar_variable('ao_X','averaged_orientation',0)
+    calc2.add_scalar_variable('s','s')
+    calc3 = tvtk.ArrayCalculator(input=calc2.output,result_array_name="n2",function="ao_Y/(2*s*n1)",replacement_value=1,replace_invalid_values=True)
+    calc3.add_scalar_variable('ao_Y','averaged_orientation',1)
+    calc3.add_scalar_variable('s','s')
+    calc3.add_scalar_variable('n1','n1')
+    calc4 = tvtk.ArrayCalculator(input=calc3.output,result_array_name="n",function="n1*iHat + n2*jHat",replace_invalid_values=True)
+    calc4.add_scalar_variable('n1','n1')
+    calc4.add_scalar_variable('n2','n2')
+
+
+    calc4.update()
+    calc4.output.point_data.set_active_vectors('n')
+    
+    glyph = tvtk.Glyph3D(source=cylinder_source.output,input=calc4.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
+     
+    calc1.update()
+    calc1.output.point_data.set_active_scalars('s')
+    delaunay = tvtk.Delaunay2D(input=calc1.output)
+    
+    aDelaunay = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=delaunay.output,lookup_table=lut))
+    aGlyph = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=glyph.output, lookup_table=lut, scalar_visibility=False),property=tvtk.Property(color=(0.5,0.5,0.5)))
+    
+    ren = tvtk.Renderer()
+    ren.add_actor(aDelaunay)
+    ren.add_actor(aScalarBar)
+    ren.add_actor(aGlyph)
+    #ren.add_actor(aDomainSource)
+    
+    ren.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
+    
+    renderWindow = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
+    renderWindow.add_renderer(ren)
+    renderWindow.render()
+     
+    windowToImageFilter = tvtk.WindowToImageFilter(input=renderWindow)
+    windowToImageFilter.update()
 
 
 #
@@ -139,6 +144,51 @@ if len(batch_files) > 0:
      
     windowToImageFilter2 = tvtk.WindowToImageFilter(input=renderWindow2)
     windowToImageFilter2.update()
+    
+    
+#
+# LdG Visualisation
+#
+if len(LdG_solutions) > 0:
+    r3 = tvtk.XMLUnstructuredGridReader(file_name=LdG_solutions[0])
+    
+    calc5 = tvtk.ArrayCalculator(input=r3.output,result_array_name="s",function="mag(u)",replacement_value=0, replace_invalid_values=True)
+    calc5.add_vector_variable('u','u')
+    calc6 = tvtk.ArrayCalculator(input=calc5.output,result_array_name="n1",function="sqrt(ao_X/(2*s) + 0.5)",replacement_value=0,replace_invalid_values=True)
+    calc6.add_scalar_variable('ao_X','u',0)
+    calc6.add_scalar_variable('s','s')
+    calc7 = tvtk.ArrayCalculator(input=calc6.output,result_array_name="n2",function="ao_Y/(2*s*n1)",replacement_value=1,replace_invalid_values=True)
+    calc7.add_scalar_variable('ao_Y','u',1)
+    calc7.add_scalar_variable('s','s')
+    calc7.add_scalar_variable('n1','n1')
+    calc8 = tvtk.ArrayCalculator(input=calc7.output,result_array_name="n",function="n1*iHat + n2*jHat",replace_invalid_values=True)
+    calc8.add_scalar_variable('n1','n1')
+    calc8.add_scalar_variable('n2','n2')
+    
+    calc8.update()
+    calc8.output.point_data.set_active_vectors('n')
+    glyph3 = tvtk.Glyph3D(source=cylinder_source.output,input=calc8.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
+    aGlyph3 = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=glyph3.output, lookup_table=lut, scalar_visibility=False),property=tvtk.Property(color=(0.5,0.5,0.5)))
+
+    
+    umesh = tvtk.GeometryFilter(input=calc5.output)
+    umesh.update()
+    umesh.output.point_data.set_active_scalars('s')
+    aMesh = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=umesh.output,lookup_table=lut))
+
+    ren3 = tvtk.Renderer()
+    ren3.add_actor(aGlyph3)
+    ren3.add_actor(aDomainSource)
+    ren3.add_actor(aMesh)
+    ren3.add_actor(aScalarBar)
+    ren3.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
+    
+    renderWindow3 = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
+    renderWindow3.add_renderer(ren3)
+    renderWindow3.render()
+     
+    windowToImageFilter3 = tvtk.WindowToImageFilter(input=renderWindow3)
+    windowToImageFilter3.update()
 
      
 for filename in averaged_files:
@@ -149,6 +199,16 @@ for filename in averaged_files:
     windowToImageFilter.modified()
     windowToImageFilter.update()
     writer = tvtk.PNGWriter(file_name='%s.png'%os.path.splitext(filename)[0],input=windowToImageFilter.output)
+    writer.write()
+    
+for filename in LdG_solutions:
+    print 'doing file ',filename
+    r3.file_name = filename
+    r3.modified()
+    ren3.render()
+    windowToImageFilter3.modified()
+    windowToImageFilter3.update()
+    writer = tvtk.PNGWriter(file_name='%s.png'%os.path.splitext(filename)[0],input=windowToImageFilter3.output)
     writer.write()
     
 for filename in batch_files:

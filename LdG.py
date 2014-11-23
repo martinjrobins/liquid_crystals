@@ -11,21 +11,35 @@ from setupLdG import setupLdG
 eps = 0.02
 mesh = UnitSquare(50,50)
 (F,bc,Q) = setupLdG(mesh,pi/2,pi/2,0,0,eps)
+out_dir = 'out/LdG'
+
 
 # Compute solution
 solve(F == 0, Q, bc, solver_parameters={"newton_solver":
                                         {"relative_tolerance": 1e-6}})
-(Q11, Q12) = Q.split()
+#(Q11, Q12) = Q.split()
 
 # Plot sigma and u
-plot(Q11,title='Q11')
-plot(Q12,title='Q12')
+#plot(Q11,title='Q11')
+#plot(Q12,title='Q12')
 
-s = sqrt(0.5*(Q11*Q11 + Q12*Q12))
-plot(s,title='s')
-theta = acos(Q11)/2.0
+#s = sqrt(0.5*(Q11*Q11 + Q12*Q12))
+#plot(s,title='s')
+#theta = acos(Q11)/2.0
 #sin_theta = project(Q12/(2*s*cos_theta))
 #plot(as_vector([cos_theta,sin_theta]),title='director')
-plot(as_vector([cos(theta),sin(theta)]))
-interactive()
+#plot(as_vector([cos(theta),sin(theta)]))
+#interactive()
 
+file = File("%s/LdG_solution_D1.pvd"%out_dir)
+file << Q
+
+(F,bc,Q) = setupLdG(mesh,pi/2,pi/2,pi,0,eps)
+
+# Compute solution
+solve(F == 0, Q, bc, solver_parameters={"newton_solver":
+                                        {"relative_tolerance": 1e-6}})
+
+
+file = File("%s/LdG_solution_R1.pvd"%out_dir)
+file << Q
