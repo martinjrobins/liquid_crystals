@@ -3,11 +3,13 @@
 
 from particleSimulation import *
 from tvtk.api import tvtk
-from random import uniform
+from random import uniform,sample
 from math import sqrt,pi,cos,sin
 import os
 import sys
 from multiprocessing import Pool
+import numpy as np
+
 
 
 # In[2]:
@@ -99,33 +101,52 @@ def run_simulation(run):
     
     tau = monte_carlo_timestep(N_b,0,particles,lattice_particles,U_hgo,params)[2]
     
-    f = open('%s/U%04d'%(out_dir,run), 'w')
     
+    if not os.path.exists(out_dir+'/%04d'%run):
+        os.makedirs(out_dir+'/%04d'%run)
+        
+    f = open('%s/%04d/U'%(out_dir,run), 'w')
     
     params['Dtrans'] = diff_step
     params['Drot'] = rot_step
     params['Temp'] = T
+
+    N_relax = 50
+    N_run = 100
     
-    for batch in range(50):
-        tau = monte_carlo_timestep(N_b,0,particles,lattice_particles,U,params)
+    sample_trajectories_i = sample(range(N),100)
+    sample_trajectories = np.empty([len(sample_trajectories_i),2,N_run])
+
+    for batch in range(N_relax):
+        tau = monte_carlo_timestep(N_b,0,particles,lattice_particles,U,params)        
         s = sqrt(tau[0]**2+tau[1]**2)
         print 's = ',s,' U = ',tau[2]
-        f.write('%f %f\n'%(s,tau[2]))
+        f.write('%d %f %f\n'%(batch*N_b,s,tau[2]))
         f.flush()
-    
-    tau = monte_carlo_timestep(N_b*10,N_b,particles,lattice_particles,U,params)
-    s = sqrt(tau[0]**2+tau[1]**2)
-    print 's = ',s,' U = ',tau[2]
-    f.write('%f %f\n'%(s,tau[2]))
-    f.close()
-    
-    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch%04d.vtu'%(out_dir,run))
-    w.write()
-    
-    w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/finalAveraged%04d.vtu'%(out_dir,run))
-    w.write()
         
-pool = Pool(processes=6)
-pool.map(run_simulation, range(100))
+    for batch in range(N_run):
+        tau = monte_carlo_timestep(N_b*10,N_b,particles,lattice_particles,U,params)
+        
+        for i in range(len(sample_trajectories_i)):
+            sample_trajectories[i,0,batch] = particles[i].position[0]    
+            sample_trajectories[i,1,batch] = particles[i].position[1]
+        
+        s = sqrt(tau[0]**2+tau[1]**2)
+        print 's = ',s,' U = ',tau[2]
+        f.write('%d %f %f\n'%(batch*N_b*10+N_relax*N_b,s,tau[2]))
+        f.flush()
+    import numpy as np
+
+        w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/%04d/vtkBatch%04d.vtu'%(out_dir,run,batch))
+        w.write()
+    
+        w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/%04d/vtkAveraged%04d.vtu'%(out_dir,run,batch))
+        w.write()
+    
+        np.save('%s/%04d/trajectories.npy'%(out_dir,run), sample_trajectories)    
+    
+        
+pool = Pool(processes=4)
+pool.map(run_simulation, range(4))
     
       
