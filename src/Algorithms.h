@@ -71,10 +71,15 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			REGISTER_SPECIES_PARTICLE(i);
 			//thetaa = (theta + n*thetaa)/(n+1);
 			//ua = Vect3d(cos(thetaa),sin(thetaa),0);
-			ua = (u + n*ua)/(n+1);
-			thetaa = atan2(ua[1],ua[0]);
-			ra = (r + n*ra)/(n+1);
 			n++;
+			const Vect3d delta = u-ua;
+			ua += delta/n;
+			uv += delta*(u-ua);
+
+			thetaa = atan2(ua[1],ua[0]);
+
+			ra += (r-ra)/n;
+
 			if (fixed) continue;
 
 			const Vect3d rand_inc = Dtrans*Vect3d(i.rand_uniform()-0.5,i.rand_uniform()-0.5,0);
@@ -152,12 +157,17 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 				const double m1 = sqrt(u[0]/(2*U)+0.5);
 				const double m2 = u[1]/(2*U*m1);
 				theta = atan2(m2,m1);
-				ua = (u + n*ua)/(n+1);
+
+				n++;
+				const Vect3d delta = u-ua;
+				ua += delta/n;
+				uv += delta*(u-ua);
+
 				const double Ua = ua.norm();
 				const double n1 = sqrt(ua[0]/(2*Ua)+0.5);
 				const double n2 = ua[1]/(2*Ua*n1);
 				thetaa = atan2(n2,n1);
-				n++;
+
 			});
 			particles->reset_neighbour_search(diameter);
 		}

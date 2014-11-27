@@ -10,6 +10,7 @@ from tvtk.api import tvtk
 import os
 import sys
 import matplotlib.pyplot as plt
+import numpy as np
 from utilities import import_columns
 
 
@@ -17,8 +18,8 @@ from utilities import import_columns
 assert len(sys.argv)==2
 out_dir = sys.argv[1]
 
-L = 1
-sigma_s = 0.5/40
+L = 25
+sigma_s = 0.5
 k = 3
 
 
@@ -28,6 +29,21 @@ LdG_solutions = glob.glob('%s/LdG_solution_*.vtu'%out_dir)
 
 averaged_files = glob.glob('%s/vtkAveraged*.vtu'%out_dir)
 averaged_files.sort()
+
+trajectory_files = glob.glob('%s/trajectories*.npy'%out_dir)
+
+plt.figure(figsize=(6,4.5))
+plt.xlabel('x')
+plt.ylabel('y')
+for filename in trajectory_files:
+    print 'doing ',filename
+    data = np.load(filename)
+    #with np.load(filename) as data:
+    plt.clf()
+    for i in range(data.shape[0]):
+        plt.plot(data[i,0,:],data[i,1,:])
+    plt.savefig('%s.pdf'%os.path.splitext(filename)[0])
+        
 
 if len(averaged_files)==0:
     averaged_files = glob.glob('%s/finalAveraged*.vtu'%out_dir)
@@ -59,9 +75,13 @@ if len(batch_files)==0:
 lut = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,1]);
 lut.build()
 
+lut2 = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,0.5]);
+lut2.build()
+
 domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
 aDomainSource = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=domain_source.output),property=tvtk.Property(representation='w'))
 aScalarBar = tvtk.ScalarBarActor(lookup_table=lut,title="s",position=[0.87,0.1],label_format='%-#2.1g',maximum_width_in_pixels=100)
+aScalarBar2 = tvtk.ScalarBarActor(lookup_table=lut2,title="Q Var",position=[0.87,0.1],label_format='%-#2.1g',maximum_width_in_pixels=100)
 
 
 transform = tvtk.Transform()
@@ -87,7 +107,27 @@ if len(averaged_files)>0:
     calc4 = tvtk.ArrayCalculator(input=calc3.output,result_array_name="n",function="n1*iHat + n2*jHat",replace_invalid_values=True)
     calc4.add_scalar_variable('n1','n1')
     calc4.add_scalar_variable('n2','n2')
+    calc9 = tvtk.ArrayCalculator(input=r.output,result_array_name="Q11_var",function="variance_orientation_X/(n-1)",replacement_value=0, replace_invalid_values=True)
+    calc9.add_scalar_variable('n','number_of_moves')
+    calc9.add_scalar_variable('variance_orientation_X','variance_orientation',0)
+    calc10 = tvtk.ArrayCalculator(input=calc9.output,result_array_name="Q12_var",function="variance_orientation_Y/(n-1)",replacement_value=0, replace_invalid_values=True)
+    calc10.add_scalar_variable('n','number_of_moves')
+    calc10.add_scalar_variable('variance_orientation_Y','variance_orientation',1)
+    delaunay2 = tvtk.Delaunay2D(input=calc10.output)    
+    aDelaunay2 = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=delaunay2.output,lookup_table=lut2))
+    ren4 = tvtk.Renderer()
+    ren4.add_actor(aDelaunay2)
+    ren4.add_actor(aScalarBar2)
 
+    ren4.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
+    
+    renderWindow4 = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
+    renderWindow4.add_renderer(ren4)
+    renderWindow4.render()
+     
+    windowToImageFilter4 = tvtk.WindowToImageFilter(input=renderWindow4)
+    windowToImageFilter4.update()
+    
 
     calc4.update()
     calc4.output.point_data.set_active_vectors('n')
@@ -199,6 +239,21 @@ for filename in averaged_files:
     windowToImageFilter.modified()
     windowToImageFilter.update()
     writer = tvtk.PNGWriter(file_name='%s.png'%os.path.splitext(filename)[0],input=windowToImageFilter.output)
+    writer.write()
+    
+    calc10.update()
+    calc10.output.point_data.set_active_scalars('Q11_var')
+    ren4.render()
+    windowToImageFilter4.modified()
+    windowToImageFilter4.update()
+    writer = tvtk.PNGWriter(file_name='%s_Q11_var.png'%os.path.splitext(filename)[0],input=windowToImageFilter4.output)
+    writer.write()
+    
+    calc10.output.point_data.set_active_scalars('Q12_var')
+    ren4.render()
+    windowToImageFilter4.modified()
+    windowToImageFilter4.update()
+    writer = tvtk.PNGWriter(file_name='%s_Q12_var.png'%os.path.splitext(filename)[0],input=windowToImageFilter4.output)
     writer.write()
     
 for filename in LdG_solutions:

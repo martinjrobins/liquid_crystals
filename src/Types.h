@@ -15,15 +15,15 @@ using namespace Aboria;
 
 const double k_b = 1.3806488e-23;
 
-enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_AVERAGED_ORIENTATION,SPECIES_AVERAGED_POSITION,SPECIES_NUM_MOVES,SPECIES_FIXED,SPECIES_THETA,SPECIES_AVERAGED_THETA,SPECIES_Q11,SPECIES_Q12};
-typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,unsigned int,bool,double,double,double,double> SpeciesTuple;
+enum {SPECIES_VELOCITY,SPECIES_ORIENTATION,SPECIES_POTENTIAL,SPECIES_AVERAGED_ORIENTATION,SPECIES_VARIANCE_ORIENTATION,SPECIES_AVERAGED_POSITION,SPECIES_NUM_MOVES,SPECIES_FIXED,SPECIES_THETA,SPECIES_AVERAGED_THETA,SPECIES_Q11,SPECIES_Q12};
+typedef std::tuple<Vect3d,Vect3d,double,Vect3d,Vect3d,Vect3d,unsigned int,bool,double,double,double,double> SpeciesTuple;
 typedef Particles<SpeciesTuple> SpeciesType;
 namespace Aboria {
 template <>
 class DataNames<SpeciesTuple> {
 public:
 	std::string static get(unsigned int n) {
-		std::string ret[11] = {"velocity","orientation","potential","averaged_orientation","averaged_position","number_of_moves","fixed","theta","averaged_theta","Q11","Q12"};
+		std::string ret[12] = {"velocity","orientation","potential","averaged_orientation","variance_orientation","averaged_position","number_of_moves","fixed","theta","averaged_theta","Q11","Q12"};
 		return ret[n];
 	}
 };
@@ -37,6 +37,7 @@ public:
 				GET_TUPLE(Vect3d,u,SPECIES_ORIENTATION,particle); \
 				GET_TUPLE(Vect3d,ra,SPECIES_AVERAGED_POSITION,particle); \
 				GET_TUPLE(Vect3d,ua,SPECIES_AVERAGED_ORIENTATION,particle); \
+				GET_TUPLE(Vect3d,uv,SPECIES_VARIANCE_ORIENTATION,particle); \
 				GET_TUPLE(unsigned int,n,SPECIES_NUM_MOVES,particle); \
 				GET_TUPLE(bool,fixed,SPECIES_FIXED,particle); \
 				GET_TUPLE(double,thetaa,SPECIES_AVERAGED_THETA,particle); \
