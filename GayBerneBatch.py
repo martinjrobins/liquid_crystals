@@ -135,7 +135,6 @@ def run_simulation(run):
         print 's = ',s,' U = ',tau[2]
         f.write('%d %f %f\n'%(batch*N_b*10+N_relax*N_b,s,tau[2]))
         f.flush()
-    import numpy as np
 
         w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/%04d/vtkBatch%04d.vtu'%(out_dir,run,batch))
         w.write()
