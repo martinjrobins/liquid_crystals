@@ -161,6 +161,8 @@ void* extract_vtk_wrapped_pointer(PyObject* obj)
     /* register the from-python converter */ \
     converter::registry::insert(&extract_vtk_wrapped_pointer, type_id<type>());
 
+template Vect3d pow<double,3,int>(Vect3d,int);
+template Vect3d pow<double,3,double>(Vect3d,double);
 
 BOOST_PYTHON_MODULE(particleSimulation) {
 
@@ -191,6 +193,8 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 			.def(boost::python::map_indexing_suite<std::map<std::string,double> >())
 			;
 
+
+
 	class_<Vect3d,Aboria::ptr<Vect3d> >("Vect3d",init<>())
 			.def(init<const Vect3d&>())
 			.def(init<double,double,double>())
@@ -198,6 +202,9 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 			.def(self + self)
 			.def(self - self)
 			.def(self / double())
+			.def(self * double())
+			.def(pow(self, int()))
+			.def(pow(self, double()))
 			.def(self_ns::str(self))
 			.def("__getitem__", &getitem_Vect3d)
 			.def("__setitem__", &setitem_Vect3d)
@@ -232,6 +239,7 @@ BOOST_PYTHON_MODULE(particleSimulation) {
 		ADD_PROPERTY(SPECIES_ORIENTATION)
 		ADD_PROPERTY(SPECIES_POTENTIAL)
 		ADD_PROPERTY(SPECIES_AVERAGED_ORIENTATION)
+		ADD_PROPERTY(SPECIES_VARIANCE_ORIENTATION)
 		ADD_PROPERTY(SPECIES_AVERAGED_THETA)
 		ADD_PROPERTY(SPECIES_THETA)
 		ADD_PROPERTY(SPECIES_AVERAGED_POSITION)

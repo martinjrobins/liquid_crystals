@@ -15,6 +15,7 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 		n = 0;
 		u = Vect3d(cos(theta),sin(theta),0);
 		ua = u;
+		uv = 0;
 		thetaa = theta;
 		ra = r;
 	});
@@ -23,6 +24,7 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 		REGISTER_SPECIES_PARTICLE(i);
 		n = 0;
 		ua = u;
+		uv = 0;
 		thetaa = theta;
 		ra = r;
 	});

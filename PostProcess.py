@@ -11,6 +11,7 @@ import os
 import sys
 import matplotlib.pyplot as plt
 import numpy as np
+from random import sample
 from utilities import import_columns
 
 
@@ -40,7 +41,12 @@ for filename in trajectory_files:
     data = np.load(filename)
     #with np.load(filename) as data:
     plt.clf()
-    for i in range(data.shape[0]):
+    if (data.shape[0] > 5):
+        indicies = sample(range(data.shape[0]),5)
+    else:
+        indicies = range(data.shape[0])
+
+    for i in indicies:
         plt.plot(data[i,0,:],data[i,1,:])
     plt.savefig('%s.pdf'%os.path.splitext(filename)[0])
         
@@ -53,7 +59,7 @@ if len(averaged_files)==0:
     #k = 3
     
 else:
-    U_data = import_columns('%s/U0000'%out_dir)
+    U_data = import_columns('%s/U'%out_dir)
     plt.figure(figsize=(6,4.5))
     plt.plot(U_data[0]+1,U_data[1], label="U")
     plt.xlabel("$N \times 10^5$")
@@ -75,7 +81,7 @@ if len(batch_files)==0:
 lut = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,1]);
 lut.build()
 
-lut2 = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,0.5]);
+lut2 = tvtk.LookupTable(hue_range=[0.66667,0.0],range=[0,0.1]);
 lut2.build()
 
 domain_source = tvtk.CubeSource(x_length=L,y_length=L,z_length=0,center=[L/2.0,L/2.0,0])
@@ -113,8 +119,9 @@ if len(averaged_files)>0:
     calc10 = tvtk.ArrayCalculator(input=calc9.output,result_array_name="Q12_var",function="variance_orientation_Y/(n-1)",replacement_value=0, replace_invalid_values=True)
     calc10.add_scalar_variable('n','number_of_moves')
     calc10.add_scalar_variable('variance_orientation_Y','variance_orientation',1)
-    delaunay2 = tvtk.Delaunay2D(input=calc10.output)    
-    aDelaunay2 = tvtk.Actor(mapper=tvtk.PolyDataMapper(input=delaunay2.output,lookup_table=lut2))
+    delaunay2 = tvtk.Delaunay2D(input=calc10.output)  
+    delaunay2mapper = tvtk.PolyDataMapper(input=delaunay2.output,lookup_table=lut2)
+    aDelaunay2 = tvtk.Actor(mapper=delaunay2mapper)
     ren4 = tvtk.Renderer()
     ren4.add_actor(aDelaunay2)
     ren4.add_actor(aScalarBar2)
@@ -243,6 +250,8 @@ for filename in averaged_files:
     
     calc10.update()
     calc10.output.point_data.set_active_scalars('Q11_var')
+    delaunay2mapper.scalar_range = calc10.output.point_data.get_array('Q11_var').range
+    delaunay2mapper.modified()
     ren4.render()
     windowToImageFilter4.modified()
     windowToImageFilter4.update()
@@ -250,6 +259,8 @@ for filename in averaged_files:
     writer.write()
     
     calc10.output.point_data.set_active_scalars('Q12_var')
+    delaunay2mapper.scalar_range = calc10.output.point_data.get_array('Q12_var').range
+    delaunay2mapper.modified()
     ren4.render()
     windowToImageFilter4.modified()
     windowToImageFilter4.update()

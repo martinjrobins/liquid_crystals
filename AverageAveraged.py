@@ -33,10 +33,13 @@ for i in range(fromi,toi):
         particles_sum.copy_from_vtk_grid(tvtk.to_vtk(r.output))
     else:
         for p_sum,p in zip(particles_sum,particles):
-            p_sum.averaged_orientation = p_sum.averaged_orientation + p.averaged_orientation
+            delta = p_sum.averaged_orientation - p.averaged_orientation
+            total_n = p_sum.number_of_moves + p.number_of_moves
+            p_sum.averaged_orientation = p.averaged_orientation + delta*float(p_sum.number_of_moves)/total_n
+            #p_sum.variance_orientation = p_sum.variance_orientation + p.variance_orientation + delta**2*p_sum.number_of_moves*p.number_of_moves/total_n
+            p_sum.variance_orientation = p.variance_orientation
+            p_sum.number_of_moves = total_n
 
-for p_sum in particles_sum:
-    p_sum.averaged_orientation = p_sum.averaged_orientation / (toi-fromi)
         
 w = tvtk.XMLUnstructuredGridWriter(input=particles_sum.get_grid(), file_name='%s/vtkAveragedAverage%04d_%04d.vtu'%(out_dir,fromi,toi))
 w.write()
