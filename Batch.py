@@ -16,8 +16,11 @@ import os
 import sys
 from multiprocessing import Pool
 import numpy as np
+from dolfin import UnitSquare,solve
+from setupLdG import setupLdG
 
-assert len(sys.argv)==4
+
+assert len(sys.argv)==5
 # Batch out_dir GB/HGO L D/R/N
 
 # In[2]:
@@ -85,6 +88,7 @@ def run_simulation(run):
         if sys.argv[3]=='N':
             p.theta = uniform(0,2*pi)
         else:
+            x = [p.position[0],p.position[1]]
             (Q11,Q12) = Q(x)
             s = sqrt(Q11**2+Q12**2)
             n1 = sqrt(Q11/(2*s)+0.5)
@@ -188,7 +192,7 @@ def run_simulation(run):
         np.save('%s/%04d/trajectories.npy'%(out_dir,run), sample_trajectories)    
     
         
-pool = Pool(processes=4)
-pool.map(run_simulation, range(4))
+pool = Pool(processes=1)
+pool.map(run_simulation, range(1))
     
       

@@ -23,7 +23,7 @@ N_b = 10**3
 out_dir = 'out/LdG_LL'
 eps = 0.02
 
-mesh = UnitSquareMesh(N_LdG,N_LdG)
+mesh = UnitSquare(N_LdG,N_LdG)
 (F,bc,Q) = setupLdG(mesh,pi/2,pi/2,pi,0,eps)
 
 file = File("%s/LdG_init.pvd"%out_dir)
