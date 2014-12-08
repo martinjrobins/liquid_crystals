@@ -67,8 +67,9 @@ else:
     plt.savefig('%s/U_plot.pdf'%out_dir)
         
 
-batch_files = glob.glob('%s/vtkBatch*.vtu'%out_dir)
+batch_files = glob.glob('%s/vtkBatch*.vtu'%out_dir) + glob.glob('%s/vtkInit.vtu'%out_dir)
 batch_files.sort()
+print batch_files
 if len(batch_files)==0:
     batch_files = glob.glob('%s/finalBatch*.vtu'%out_dir)
     batch_files.sort()
