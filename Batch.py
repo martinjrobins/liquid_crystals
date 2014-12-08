@@ -11,12 +11,12 @@ Created on Thu Dec  4 16:51:57 2014
 from particleSimulation import *
 from tvtk.api import tvtk
 from random import uniform,sample
-from math import sqrt,pi,cos,sin
+from math import sqrt,pi,cos,sin,atan2
 import os
 import sys
 from multiprocessing import Pool
 import numpy as np
-from dolfin import UnitSquare,solve
+from dolfin import UnitSquareMesh,solve
 from setupLdG import setupLdG
 
 
@@ -33,11 +33,11 @@ L = float(sys.argv[2])
 
 assert sys.argv[3]=='GB' or sys.argv[3]=='HGO'
 
-assert sys.argv[4]=='D' or sys.argv[3]=='R' or sys.argv[3]=='N'
+assert sys.argv[4]=='D' or sys.argv[4]=='R' or sys.argv[4]=='N'
 
-if sys.argv[3] != 'N':
+if sys.argv[4] != 'N':
     eps = 0.02
-    mesh = UnitSquare(50,50)
+    mesh = UnitSquareMesh(50,50)
     if sys.argv[4] == 'D':
         (F,bc,Q) = setupLdG(mesh,pi/2,pi/2,0,0,eps)
     else:
@@ -66,7 +66,7 @@ averaging_diameter = 2.5
 print 'adding ',N,' particles...'
 
 
-N_b = 10**5
+N_b = 10**3
 tau_s = 10**(-4)
 
     
@@ -75,7 +75,13 @@ def run_simulation(run):
     
     params = Params()
     params['Dtrans'] = diff_step*10
-    params['Drot'] = rot_step*10
+    if sys.argv[4]=='N':
+        params['Drot'] = rot_step*10
+    else:
+        params['Drot'] = rot_step*0
+        
+
+    params['Drot'] = rot_step*0
     params['Temp'] = 0.0000000001
     params['h'] = averaging_diameter
     params['L'] = L
@@ -85,10 +91,10 @@ def run_simulation(run):
         p = Particle()
         eps = sigma_s
         p.position = Vect3d(uniform(eps,L-eps),uniform(eps,L-eps),0)
-        if sys.argv[3]=='N':
+        if sys.argv[4]=='N':
             p.theta = uniform(0,2*pi)
         else:
-            x = [p.position[0],p.position[1]]
+            x = [p.position[0]/L,p.position[1]/L]
             (Q11,Q12) = Q(x)
             s = sqrt(Q11**2+Q12**2)
             n1 = sqrt(Q11/(2*s)+0.5)
@@ -148,9 +154,12 @@ def run_simulation(run):
     
     tau = monte_carlo_timestep(N_b,0,particles,lattice_particles,U_hgo,params)[2]
     
-    
     if not os.path.exists(out_dir+'/%04d'%run):
         os.makedirs(out_dir+'/%04d'%run)
+
+    w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/%04d/vtkInit.vtu'%(out_dir,run))
+    w.write()
+    
         
     f = open('%s/%04d/U'%(out_dir,run), 'w')
     
