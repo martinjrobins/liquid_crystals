@@ -66,7 +66,7 @@ averaging_diameter = 2.5
 print 'adding ',N,' particles...'
 
 
-N_b = 10**3
+N_b = 10**5
 tau_s = 10**(-4)
 
     
@@ -201,7 +201,7 @@ def run_simulation(run):
         np.save('%s/%04d/trajectories.npy'%(out_dir,run), sample_trajectories)    
     
         
-pool = Pool(processes=1)
-pool.map(run_simulation, range(1))
+pool = Pool(processes=2)
+pool.map(run_simulation, range(2))
     
       
