@@ -55,7 +55,10 @@ sigma_s = 0.5
 rho = 0.3
 rot_step = 2*pi/25
 diff_step = sigma_s/10
-T = 3.2
+if sys.argv[3]=='HGO':
+    T = 0.0000000001
+else:
+    T = 3.2
 area = (1.0/4.0)*pi*k*sigma_s**2
 #N = int(rho*L**2/area)
 N = int(rho*(L**2)/(sigma_s**2))
