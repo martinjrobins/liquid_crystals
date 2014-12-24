@@ -30,8 +30,8 @@ double LabwohlLasherPotential::evaluate(const Vect3d& x1, const Vect3d& u1,
 		const Vect3d& x2, const Vect3d& u2) const {
 	Vect3d dx = x2-x1;
 	if (dx.norm() < cut_off()) {
-		//return -epsilon*(1.5*pow(u1.dot(u2),2)-0.5);
-		return 1.0-pow(u1.dot(u2),2);
+		return -epsilon*(1.5*pow(u1.dot(u2),2)-0.5);
+		//return 1.0-pow(u1.dot(u2),2);
 	} else {
 		return 0;
 	}
