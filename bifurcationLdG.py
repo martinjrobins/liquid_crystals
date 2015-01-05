@@ -44,7 +44,7 @@ for (theD,theEps) in zip(D,eps):
         solve(F == 0, Q, bc, solver_parameters={"newton_solver":
                                         {"relative_tolerance": 1e-6}})
                                         
-        file = File("%s/LdG_solution_%f_%s.pvd"%(out_dir,theD,name))
+        file = File("%s/LdG_solution_%f_%s.pvd"%(out_dir,theD*10**6,name))
         file << Q
         
         f.write(' %f'%(calc_energy(Q,theEps)))
