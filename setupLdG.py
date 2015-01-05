@@ -93,3 +93,7 @@ def setupLdG(mesh,leftbc,rightbc,bottombc,topbc,eps):
         inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
 
     return (F,bc,Q)
+    
+def calc_energy(Q,eps):
+    E = (inner(grad(Q[0]), grad(Q[0])) + inner(grad(Q[1]), grad(Q[1])) + (1/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)**2) * dx()
+    return assemble(E)

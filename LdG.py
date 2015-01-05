@@ -10,7 +10,18 @@ from setupLdG import setupLdG
 
 eps = 0.02
 mesh = UnitSquare(50,50)
+
+#D1,D2,R1,R2,R3,R4
+arg1 = {pi/2, pi/2, pi/2, pi/2, 3*pi/2, pi/2}
+arg2 = {pi/2, pi/2, pi/2, pi/2, pi/2, 3*pi/2}
+arg3 = {0, pi, pi, 0, pi, pi}
+arg4 = {0, pi, 0, pi, pi, pi}
+
+#D1
 (F,bc,Q) = setupLdG(mesh,pi/2,pi/2,0,0,eps)
+
+
+
 out_dir = 'out/LdG'
 
 
