@@ -61,9 +61,11 @@ def setupLdG(mesh,leftbc,rightbc,bottombc,topbc,eps):
     class sExpression(Expression):
         def eval(self, value, x):
             if near(x[0],1.0) or near(x[0],0.0):
-                value[0] = trap(x[1],3*eps)
+                #value[0] = trap(x[1],3*eps)
+                value[0] = trap(x[1],0.06)
             elif near(x[1],1.0) or near(x[1],0.0):
-                value[0] = trap(x[0],3*eps)
+                #value[0] = trap(x[0],3*eps)
+                value[0] = trap(x[0],0.06)
             else:
                 value[0] = 1.0
             
@@ -71,6 +73,7 @@ def setupLdG(mesh,leftbc,rightbc,bottombc,topbc,eps):
     
     # Define function space
     V = VectorFunctionSpace(mesh, "CG", 1)
+    Q = Function(V,name='u')
     
     # Define boundary condition
     u_bottom = as_vector([cos(2*theta_bottom),sin(2*theta_bottom)])*s
@@ -84,7 +87,7 @@ def setupLdG(mesh,leftbc,rightbc,bottombc,topbc,eps):
     bc_right = DirichletBC(V, u_right, right)
     bc = [bc_bottom,bc_top,bc_left,bc_right]
     
-    Q = project(as_vector([cos(2*theta),sin(2*theta)]),V=V,bcs = bc)
+    Q.assign(project(as_vector([cos(2*theta),sin(2*theta)]),V=V,bcs = bc))
     
     v = TestFunction(V)
     

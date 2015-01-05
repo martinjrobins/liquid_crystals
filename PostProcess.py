@@ -19,7 +19,7 @@ from utilities import import_columns
 assert len(sys.argv)==2
 out_dir = sys.argv[1]
 
-L = 50
+L = 1
 sigma_s = 0.5
 k = 3
 
