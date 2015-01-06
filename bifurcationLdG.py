@@ -20,7 +20,7 @@ rightbcs = [pi/2, pi/2, pi/2, pi/2, pi/2, 3*pi/2]
 bottombcs = [0, pi, pi, 0, pi, pi]
 topbcs = [0, pi, 0, pi, pi, pi]
 
-D = np.arange(0.1,10,0.1)*10**(-6)
+D = np.arange(0.01,2,0.01)*10**(-6)
 s0 = 0.6
 L = 10**(-11)
 c2 = 10**6
