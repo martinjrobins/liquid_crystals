@@ -20,7 +20,7 @@ assert len(sys.argv)==2
 out_dir = sys.argv[1]
 
 L = 1
-sigma_s = 0.5
+sigma_s = 0.5/50
 k = 3
 
 
