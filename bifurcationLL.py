@@ -7,9 +7,10 @@ Created on Wed Jan  7 16:07:12 2015
 
 import numpy as np
 from dolfin import *
+from tvtk.api import tvtk
 from setupLdG import setupLdG,calc_energy
 from particleSimulation import *
-
+from math import sqrt,pi,cos,sin,atan2
 import multiprocessing
 
 
@@ -23,24 +24,25 @@ rightbcs = [pi/2,  pi/2]
 bottombcs = [0, pi]
 topbcs = [0, 0]
 
-
 D = np.arange(0.01,2,0.01)*10**(-6)
-s0 = 0.6
 L = 10**(-11)
-eps = (2./3.)*D*L
+#eps = (2./3.)*D*L
+eps = np.ones(len(D))
 
-
-
+s0 = 0.6
+c2 = 10**6
+A = sqrt(2.0*(s0**2)*c2)
+T = 10.**(-9)/D
 
 def run_simulation(args):
-    print 'doing run D = %f, name = %s...'%(args['D']*10**6,args['name'])
+    print 'doing run D = %f, T = %f, name = %s...'%(args['D']*10**6,args['T'],args['name'])
     
     L = 50.0
-    rot_step = 2*pi/20
+    rot_step = 2*pi
     diff_step = 0
-    T = 0.05
+    T = args['T']
     N = int(L)
-    N_b = 10**4
+    N_b = 10**3
     
     averaging_diameter = 1.01
     
@@ -100,7 +102,7 @@ def run_simulation(args):
     params['L'] = L
 
     f = open('%s/U_%f_%s'%(out_dir,args['D']*10**6,args['name']), 'w')    
-    for batch in range(10):
+    for batch in range(5):
         tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
         s = sqrt(tau[0]**2+tau[1]**2)
         print 's = ',s,' U = ',tau[2]
@@ -125,17 +127,17 @@ if __name__ == '__main__':
 
     f = open('%s/energies.txt'%out_dir, 'w')
 
-    f.write('#D(x10^6)')
+    f.write('#D(x10^6) T')
     for name in soln_name:
         f.write(' %s'%name)
     f.write('\n')
 
-    for (theD,theEps) in zip(D,eps):
-        f.write('%f'%(theD*10**6))
+    for (theD,theEps,theT) in zip(D,eps,T):
+        f.write('%f %f'%(theD*10**6,theT))
         args = []
         for (name,leftbc,rightbc,bottombc,topbc) in zip(soln_name,leftbcs,rightbcs,bottombcs,topbcs):
             args.append(
-                {'D': theD, 'eps': theEps, 'name': name, 
+                {'D': theD, 'eps': theEps, 'name': name, 'T': theT, 
                 'leftbc': leftbc, 'rightbc': rightbc, 'bottombc': bottombc, 'topbc': topbc}                    
                 )
            

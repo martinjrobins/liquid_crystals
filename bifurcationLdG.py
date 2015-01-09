@@ -8,10 +8,10 @@ Created on Wed Oct 15 14:17:38 2014
 import numpy as np
 from dolfin import *
 from setupLdG import setupLdG,calc_energy
-
+info(NonlinearVariationalSolver.default_parameters(), True)
 
 out_dir = 'out/LdG_bifurcation'
-mesh = UnitSquareMesh(50,50)
+mesh = UnitSquareMesh(100,100)
 
 
 soln_name = ['D1','D2','R1','R2','R3','R4']
@@ -41,14 +41,16 @@ for (theD,theEps) in zip(D,eps):
         print theD,name,leftbc,rightbc,bottombc,topbc
 	(F,bc,Q) = setupLdG(mesh,leftbc,rightbc,bottombc,topbc,theEps)
         # Compute solution
-        solve(F == 0, Q, bc, solver_parameters={"newton_solver":
-                                        {"relative_tolerance": 1e-6}})
-                                        
+        solve(F == 0, Q, bc, 
+		solver_parameters={"newton_solver":{"relative_tolerance": 1e-6,
+						    "error_on_nonconvergence": False,
+						    "maximum_iterations": 20}})
         file = File("%s/LdG_solution_%f_%s.pvd"%(out_dir,theD*10**6,name))
         file << Q
         
         f.write(' %f'%(calc_energy(Q,theEps)))
         f.flush()
+
     f.write('\n')
     
 f.close()
