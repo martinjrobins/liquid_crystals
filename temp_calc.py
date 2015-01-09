@@ -23,7 +23,7 @@ import sys
 
 
 
-out_dir = 'out/LL'
+out_dir = 'out/LL/temp_calc2'
 
 
 def run_simulation(args):
@@ -88,12 +88,12 @@ def run_simulation(args):
 
 if __name__ == '__main__':
 
-    cpus = 4
+    cpus = 10
     pool = multiprocessing.Pool(cpus)
 
     f = open('%s/search_history.txt'%out_dir, 'w')
 
-    T = [10**x for x in range(-5,5)]
+    T = [10**x for x in np.arange(-1,1,0.1)]
     args = [{'T':theT} for theT in T]
     
     for theT,result in zip(T,pool.map(run_simulation, args)):
