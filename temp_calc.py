@@ -23,7 +23,7 @@ import sys
 
 
 
-out_dir = 'out/LL/temp_calc2'
+out_dir = 'out/LL/temp_calc5'
 
 
 def run_simulation(args):
@@ -34,7 +34,7 @@ def run_simulation(args):
     diff_step = 0
     T = args['T']
     N = int(L)
-    N_b = 10**4
+    N_b = 10**3
     
     averaging_diameter = 1.01
     
@@ -68,7 +68,7 @@ def run_simulation(args):
     params['periodic'] = True
 
     f = open('%s/U_%f'%(out_dir,args['T']), 'w')    
-    for batch in range(10):
+    for batch in range(30):
         tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
         s = sqrt(tau[0]**2+tau[1]**2)
         print 's = ',s,' U = ',tau[2]
@@ -93,7 +93,8 @@ if __name__ == '__main__':
 
     f = open('%s/search_history.txt'%out_dir, 'w')
 
-    T = [10**x for x in np.arange(-1,1,0.1)]
+    #T = [10**x for x in np.arange(-1,1,0.1)]
+    T = [x for x in np.arange(0.53,0.69,0.01)]
     args = [{'T':theT} for theT in T]
     
     for theT,result in zip(T,pool.map(run_simulation, args)):
