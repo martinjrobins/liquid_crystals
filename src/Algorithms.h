@@ -34,13 +34,23 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 	const double Temp = params["Temp"];
 	const double L = params["L"];
 	const double h = params["h"];
+	const bool do_periodic = params["periodic"];
 
 	std::cout <<"running with Dtrans = "<<Dtrans<<" Drot = "<<Drot<<" Temp = "<<Temp<<" L = "<<L<<std::endl;
 
 	const double buffer = L/10.0;
-	const Vect3d min(-buffer,-buffer,-2*buffer);
-	const Vect3d max(L+buffer,L+buffer,2*buffer);
-	const Vect3b periodic(false,false,false);
+	Vect3d min(-buffer,-buffer,-2*buffer);
+	Vect3d max(L+buffer,L+buffer,2*buffer);
+	Vect3b periodic(false,false,false);
+	if (do_periodic) {
+		periodic[0] = true;
+		periodic[1] = true;
+		min[0] = 0;
+		min[1] = 0;
+		max[0] = L;
+		max[1] = L;
+	}
+
 	const double diameter = potential.cut_off();
 	particles->init_neighbour_search(min,max,diameter,periodic);
 
@@ -65,7 +75,6 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			 */
 			const int index = (*particles)[0].rand_uniform()*particles->size();
 			if ((index < 0)||(index > particles->size()-1)) {
-				std::cout << "crap" << std::endl;
 				ERROR("bad index!!");
 			}
 			//const int index = ii;
@@ -90,13 +99,20 @@ Vect3d monte_carlo_timestep(const unsigned int Nb, unsigned int Na, ptr<Particle
 			double candidate_theta = theta+rand_inc2;
 			Vect3d current_u(cos(theta),sin(theta),0);
 			Vect3d candidate_u(cos(candidate_theta),sin(candidate_theta),0);
-			if ((candidate_pos[0]<0)||(candidate_pos[0]>=L)) {
-				rejects++;	
-				continue;
-			}
-			if ((candidate_pos[1]<0)||(candidate_pos[1]>=L)) {
-				rejects++;	
-				continue;
+			if (do_periodic) {
+				while (candidate_pos[0]<0) candidate_pos[0] += L;
+				while (candidate_pos[0]>=L) candidate_pos[0] -= L;
+				while (candidate_pos[1]<0) candidate_pos[1] += L;
+				while (candidate_pos[1]>=L) candidate_pos[1] -= L;
+			} else {
+				if ((candidate_pos[0]<0)||(candidate_pos[0]>=L)) {
+					rejects++;
+					continue;
+				}
+				if ((candidate_pos[1]<0)||(candidate_pos[1]>=L)) {
+					rejects++;
+					continue;
+				}
 			}
 	 
 

@@ -95,7 +95,104 @@ def setupLdG(mesh,leftbc,rightbc,bottombc,topbc,eps):
     F = inner(grad(Q[0]), grad(v[0]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[0]*v[0]*dx() + \
         inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
 
+        
     return (F,bc,Q)
+
+def calc_eigenvalues(mesh,leftbc,rightbc,bottombc,topbc,eps,Qin,n):
+    def bottom(x, on_boundary):
+        return near(x[1],0.0) and on_boundary
+    def top(x, on_boundary):
+        return near(x[1],1.0) and on_boundary
+    def left(x, on_boundary):
+        return near(x[0],0.0) and on_boundary
+    def right(x, on_boundary):
+        return near(x[0],1.0) and on_boundary
+    
+    # Define boundary condition
+    theta_bottom = Constant(bottombc)
+    theta_top = Constant(topbc)
+    theta_left = Constant(leftbc)
+    theta_right = Constant(rightbc)
+    
+    # Define nonlinear problem
+    def trap(t,d):
+        if t < d and t >= 0:
+            return t/d
+        elif t < 1-d:
+            return 1.0
+        elif t <= 1:
+            return (1-t)/d
+        else:
+            return 0
+    
+    class sExpression(Expression):
+        def eval(self, value, x):
+            if near(x[0],1.0) or near(x[0],0.0):
+                #value[0] = trap(x[1],3*eps)
+                value[0] = trap(x[1],0.06)
+            elif near(x[1],1.0) or near(x[1],0.0):
+                #value[0] = trap(x[0],3*eps)
+                value[0] = trap(x[0],0.06)
+            else:
+                value[0] = 1.0
+            
+    s = sExpression()
+    
+    # Define function space
+    V = VectorFunctionSpace(mesh, "CG", 1)
+    
+    # Define boundary condition
+    u_bottom = as_vector([cos(2*theta_bottom),sin(2*theta_bottom)])*s
+    u_top = as_vector([cos(2*theta_top),sin(2*theta_top)])*s
+    u_left = as_vector([cos(2*theta_left),sin(2*theta_left)])*s
+    u_right = as_vector([cos(2*theta_right),sin(2*theta_right)])*s
+    
+    bc_bottom = DirichletBC(V, u_bottom, bottom)
+    bc_top = DirichletBC(V, u_top, top)
+    bc_left = DirichletBC(V, u_left, left)
+    bc_right = DirichletBC(V, u_right, right)
+    bc = [bc_bottom,bc_top,bc_left,bc_right]
+    
+    v = TestFunction(V)
+    q = TrialFunction(V)
+    Q = Function(V)
+    Q.assign(Qin)
+
+    
+    #F = inner(grad(Q),grad(v))*dx() + Constant(2/eps**2)*(dot(Q,Q) - Constant(1))*elem_mult(Q,v)*dx()
+    F = -inner(grad(q[0]), grad(v[0]))*dx - (2/eps**2)*(q[0]*(3*Q[0]*Q[0] + Q[1]*Q[1] - 1) - 2*q[1]*Q[0]*Q[1])*v[0]*dx + \
+        -inner(grad(q[1]), grad(v[1]))*dx - (2/eps**2)*(q[1]*(3*Q[1]*Q[1] + Q[0]*Q[0] - 1) - 2*q[0]*Q[1]*Q[0])*v[1]*dx
+
+    L = inner(grad(Q[0]), grad(v[0]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[0]*v[0]*dx() + \
+        inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
+
+
+    #F = inner(grad(Q[0]), grad(v[0]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[0]*v[0]*dx() + \
+    #    inner(grad(Q[1]), grad(v[1]))*dx() + (2/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)*Q[1]*v[1]*dx()
+
+
+    # Assemble matrix
+    A = PETScMatrix()
+    b = PETScVector()
+    #assemble_system(F,L,bc,A_tensor=A,b_tensor=b)
+    assemble(F,tensor=A)
+
+    #dQ = TrialFunction(V)
+    #a = derivative(F, Q, dQ)
+    #assemble(a,tensor=A)
+
+    # Create eigensolver
+    eigensolver = SLEPcEigenSolver(A)
+    eigensolver.parameters['spectrum'] = 'largest real'
+    eigensolver.parameters['tolerance'] = 1e-10
+    #eigensolver.parameters['maximum_iterations'] = 100
+        
+    # Compute all eigenvalues of A x = \lambda x
+    eigensolver.solve(n)
+ 
+    return eigensolver
+        
+
     
 def calc_energy(Q,eps):
     E = (inner(grad(Q[0]), grad(Q[0])) + inner(grad(Q[1]), grad(Q[1])) + (1/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)**2) * dx()
