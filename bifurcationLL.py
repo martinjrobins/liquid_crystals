@@ -24,7 +24,7 @@ rightbcs = [pi/2,  pi/2]
 bottombcs = [0, pi]
 topbcs = [0, 0]
 
-D = np.arange(0.01,2,0.01)*10**(-6)
+D = np.arange(2.1,3,0.1)*10**(-6)
 L = 10**(-11)
 #eps = (2./3.)*D*L
 eps = np.ones(len(D))
@@ -32,27 +32,28 @@ eps = np.ones(len(D))
 s0 = 0.6
 c2 = 10**6
 A = sqrt(2.0*(s0**2)*c2)
-T = 10.**(-9)/D
+T = 10.**(-6)/D
+#T = np.ones(len(D))*0.05
 
 def run_simulation(args):
     print 'doing run D = %f, T = %f, name = %s...'%(args['D']*10**6,args['T'],args['name'])
-    
+
     L = 50.0
     rot_step = 2*pi
     diff_step = 0
     T = args['T']
     N = int(L)
-    N_b = 10**3
-    
+    N_b = 10**5
+
     averaging_diameter = 1.01
-    
+
     eps = 0.02
     mesh = UnitSquareMesh(50,50)
     (F,bc,Q) = setupLdG(mesh,args['leftbc'],args['rightbc'],args['bottombc'],args['topbc'],eps)
-        
+
     solve(F == 0, Q, bc, solver_parameters={"newton_solver":
                                         {"relative_tolerance": 1e-6}})
-    
+
     particles = Particles()
     for i in range(N+1):
         for j in range(N+1):
@@ -82,7 +83,7 @@ def run_simulation(args):
                 p.theta = atan2(n2,n1)
                 p.fixed = False
             particles.append(p)
-            
+
     lattice_particles = Particles()
     for i in range(N+1):
         for j in range(N+1):
@@ -90,8 +91,8 @@ def run_simulation(args):
             p.position = Vect3d(i,j,0)
             p.fixed = True
             lattice_particles.append(p)
-     
-    
+
+
     U = LabwohlLasherPotential(epsilon=args['eps'],lattice_spacing=1)
 
     params = Params()
@@ -101,7 +102,7 @@ def run_simulation(args):
     params['h'] = averaging_diameter
     params['L'] = L
 
-    f = open('%s/U_%f_%s'%(out_dir,args['D']*10**6,args['name']), 'w')    
+    f = open('%s/U_%f_%s'%(out_dir,args['D']*10**6,args['name']), 'w')
     for batch in range(5):
         tau = monte_carlo_timestep(N_b,N_b,particles,lattice_particles,U,params)
         s = sqrt(tau[0]**2+tau[1]**2)
@@ -111,17 +112,18 @@ def run_simulation(args):
 
     w = tvtk.XMLUnstructuredGridWriter(input=particles.get_grid(), file_name='%s/finalBatch_%f_%s.vtu'%(out_dir,args['D']*10**6,args['name']))
     w.write()
-    
+
     w = tvtk.XMLUnstructuredGridWriter(input=lattice_particles.get_grid(), file_name='%s/finalAveraged_%f_%s.vtu'%(out_dir,args['D']*10**6,args['name']))
-    w.write()    
-    
+    w.write()
+
     f.close()
-    
+
     return tau[2]
 
 
 if __name__ == '__main__':
-    print eps
+    print 'eps = ',eps
+    print 'D = ',D
 
     pool = multiprocessing.Pool(len(soln_name))
 
@@ -137,14 +139,14 @@ if __name__ == '__main__':
         args = []
         for (name,leftbc,rightbc,bottombc,topbc) in zip(soln_name,leftbcs,rightbcs,bottombcs,topbcs):
             args.append(
-                {'D': theD, 'eps': theEps, 'name': name, 'T': theT, 
-                'leftbc': leftbc, 'rightbc': rightbc, 'bottombc': bottombc, 'topbc': topbc}                    
+                {'D': theD, 'eps': theEps, 'name': name, 'T': theT,
+                'leftbc': leftbc, 'rightbc': rightbc, 'bottombc': bottombc, 'topbc': topbc}
                 )
-           
+
         for result in pool.map(run_simulation, args):
             f.write(' %f'%(result))
-            
+
         f.write('\n')
         f.flush()
-        
+
     f.close()
