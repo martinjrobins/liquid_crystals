@@ -7,6 +7,7 @@ Created on Fri Oct 31 00:48:17 2014
 
 import glob
 from tvtk.api import tvtk
+from mayavi import mlab
 import os
 import sys
 import matplotlib as mpl
@@ -25,7 +26,7 @@ out_dir = sys.argv[1]
 L = 50
 sigma_s = 0.5
 k = 3
-
+reduce=2.5
 
 
 
@@ -96,7 +97,7 @@ aScalarBar2 = tvtk.ScalarBarActor(lookup_table=lut2,title="Q Var",position=[0.87
 
 transform = tvtk.Transform()
 tvtk.to_vtk(transform).RotateZ(90)
-cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=sigma_s*2,radius=sigma_s/5).output,transform=transform)
+cylinder_source = tvtk.TransformPolyDataFilter(input=tvtk.CylinderSource(height=reduce*sigma_s*2,radius=reduce*sigma_s/5).output,transform=transform)
 
 
 
@@ -132,7 +133,7 @@ if len(averaged_files)>0:
 
     ren4.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
 
-    renderWindow4 = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
+    renderWindow4 = tvtk.RenderWindow(off_screen_rendering=False,size=[850,800])
     renderWindow4.add_renderer(ren4)
     renderWindow4.render()
 
@@ -143,7 +144,17 @@ if len(averaged_files)>0:
     calc4.update()
     calc4.output.point_data.set_active_vectors('n')
 
-    glyph = tvtk.Glyph3D(source=cylinder_source.output,input=calc4.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
+    x = np.linspace(0,L,L/reduce)
+    y = np.linspace(0,L,L/reduce)
+    xx, yy = np.meshgrid(x,y)
+    zz = np.zeros(xx.shape)
+    #points = mlab.pipeline.array2d_source(xx,yy,xx)
+    points = mlab.pipeline.scalar_scatter(xx,yy,zz,xx,figure=False)
+    delaunay3 = tvtk.Delaunay2D(input=calc4.output)
+    delaunay3.update()
+    delaunay3.output.point_data.set_active_vectors('n')
+    probeFilter = tvtk.ProbeFilter(input=points.outputs[0],source=delaunay3.output)
+    glyph = tvtk.Glyph3D(source=cylinder_source.output,input=probeFilter.output,scale_factor=1,vector_mode='use_vector',scaling=False,orient=True)
 
     calc1.update()
     calc1.output.point_data.set_active_scalars('s')
@@ -160,7 +171,7 @@ if len(averaged_files)>0:
 
     ren.reset_camera(L*0.2,L,L*0.1,L*0.9,-0.1,0.1)
 
-    renderWindow = tvtk.RenderWindow(off_screen_rendering=True,size=[850,800])
+    renderWindow = tvtk.RenderWindow(off_screen_rendering=False,size=[850,800])
     renderWindow.add_renderer(ren)
     renderWindow.render()
 
