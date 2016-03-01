@@ -26,7 +26,7 @@ out_dir = sys.argv[1]
 L = 50
 sigma_s = 0.5
 k = 3
-reduce=2.5
+reduce=3.0
 
 
 
