@@ -228,15 +228,16 @@ def calc_energy(Q,eps):
     E = (inner(grad(Q[0]), grad(Q[0])) + inner(grad(Q[1]), grad(Q[1])) + (1/eps**2)*(Q[0]*Q[0] + Q[1]*Q[1] - 1)**2) * dx()
     return assemble(E)
 
-def average_n_and_s(Q_field):
+def average_Q_and_n_and_s(Q_field,mesh):
     Q = [assemble(Q_field[0]*dx),assemble(Q_field[1]*dx)]
     print Q
     s = sqrt(Q[0]**2 + Q[1]**2)
     n1 = sqrt(0.5*(Q[0]/s + 1))
-    if Q[1]<1e-8:
-        n2 = 0
+    if Q[1]<1e-8 and s*n1<1e-8:
+        n2 = 1
     else:
-        n2 = Q[1]*n1/(Q[0]+s)
-
-    return [n1,n2],s
+        n2 = Q[1]/(2*s*n1)
+    x = SpatialCoordinate(mesh)
+    Q = [assemble(Q_field[0]*(x[0]+x[1])*dx),assemble(Q_field[1]*(x[0]+x[1])*dx)]
+    return Q,[n1,n2],s
 

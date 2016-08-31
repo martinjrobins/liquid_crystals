@@ -7,7 +7,7 @@ Created on Wed Oct 15 14:17:38 2014
 
 import numpy as np
 from dolfin import *
-from setupLdG import setupLdG,calc_energy,calc_eigenvalues,average_n_and_s
+from setupLdG import setupLdG,calc_energy,calc_eigenvalues,average_Q_and_n_and_s
 #info(NonlinearVariationalSolver.default_parameters(), True)
 
 out_dir = 'out/LdG_bifurcation'
@@ -34,6 +34,8 @@ fe2 = open('%s/eigenvalues2.txt'%out_dir, 'w')
 fs = open('%s/stable.txt'%out_dir, 'w')
 fdirector1 = open('%s/director1.txt'%out_dir, 'w')
 fdirector2 = open('%s/director2.txt'%out_dir, 'w')
+fq1 = open('%s/q1.txt'%out_dir, 'w')
+fq2 = open('%s/q2.txt'%out_dir, 'w')
 forder = open('%s/order.txt'%out_dir, 'w')
 
 
@@ -44,6 +46,8 @@ fs.write('#D(x10^6)')
 fdirector1.write('#D(x10^6)')
 fdirector2.write('#D(x10^6)')
 forder.write('#D(x10^6)')
+fq1.write('#D(x10^6)')
+fq2.write('#D(x10^6)')
 for name in soln_name:
     f.write(' %s'%name)
     fe1.write(' %s'%name)
@@ -51,6 +55,8 @@ for name in soln_name:
     fs.write(' %s'%name)
     fdirector1.write(' %s'%name)
     fdirector2.write(' %s'%name)
+    fq1.write(' %s'%name)
+    fq2.write(' %s'%name)
     forder.write(' %s'%name)
 f.write('\n')
 fe1.write('\n')
@@ -58,6 +64,8 @@ fe2.write('\n')
 fs.write('\n')
 fdirector1.write('\n')
 fdirector2.write('\n')
+fq1.write('\n')
+fq2.write('\n')
 forder.write('\n')
 
 
@@ -69,6 +77,8 @@ for (theD,theEps) in zip(D,eps):
     fs.write('%f'%(theD*10**6))
     fdirector1.write('%f'%(theD*10**6))
     fdirector2.write('%f'%(theD*10**6))
+    fq1.write('%f'%(theD*10**6))
+    fq2.write('%f'%(theD*10**6))
     forder.write('%f'%(theD*10**6))
     for (name,leftbc,rightbc,bottombc,topbc) in zip(soln_name,leftbcs,rightbcs,bottombcs,topbcs):
         print theD,name,leftbc,rightbc,bottombc,topbc
@@ -91,22 +101,26 @@ for (theD,theEps) in zip(D,eps):
         fs.write(' %d'%(all(stable)))
         fe1.write(' %f'%(eigensolver.get_eigenvalue(0)[0]))
         fe2.write(' %f'%(eigensolver.get_eigenvalue(1)[0]))
-        n,s = average_n_and_s(Q)
+        Q,n,s = average_Q_and_n_and_s(Q,mesh)
         fdirector1.write(' %f'%n[0])
         fdirector2.write(' %f'%n[1])
+        fq1.write(' %f'%Q[0])
+        fq2.write(' %f'%Q[1])
         forder.write(' %f'%s)
         print eigensolver.get_eigenvalue(0)[0]
         print eigensolver.get_eigenvalue(1)[0]
         print eigensolver.get_eigenvalue(2)[0]
         print eigensolver.get_eigenvalue(3)[0]
 
-        f.flush()
-        fe1.flush()
-        fe2.flush()
-        fs.flush()
-        fdirector1.flush()
-        fdirector2.flush()
-        forder.flush()
+    f.flush()
+    fe1.flush()
+    fe2.flush()
+    fs.flush()
+    fdirector1.flush()
+    fdirector2.flush()
+    fq1.flush()
+    fq2.flush()
+    forder.flush()
 
     f.write('\n')
     fe1.write('\n')
@@ -114,6 +128,8 @@ for (theD,theEps) in zip(D,eps):
     fs.write('\n')
     fdirector1.write('\n')
     fdirector2.write('\n')
+    fq1.write('\n')
+    fq2.write('\n')
     forder.write('\n')
 
 f.close()
@@ -122,6 +138,8 @@ fe2.close()
 fs.close()
 fdirector1.close()
 fdirector2.close()
+fq1.close()
+fq2.close()
 forder.close()
 
 
